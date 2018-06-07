@@ -56,6 +56,8 @@ func init() {
 			"Name":     100,
 		})
 
+		_ = Dbm.AddTable(models.Event{})
+
 		rgorp.Db.TraceOn(revel.AppLog)
 		Dbm.CreateTables()
 
