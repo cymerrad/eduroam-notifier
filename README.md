@@ -2,7 +2,8 @@
 
 ## Założenia
 
-Następujący input ma przerobić na spam dla użytkownika. Spamujemy tylko raz z dokładnością do MAC-adresu urządzenia.
+Następujący input ma przerobić na spam dla użytkownika. Spamujemy tylko raz z dokładnością do MAC-adresu urządzenia. I jakoś tak raz na tydzień.
+Wszystko ofc konfigurowalne, najlepiej z użyciem klienta.
 
 ```json
 {
@@ -101,7 +102,7 @@ Następujący input ma przerobić na spam dla użytkownika. Spamujemy tylko raz 
 
 ## Code Layout
 
-The directory structure of a generated Revel application:
+The directory structure of the application:
 
     conf/             Configuration directory
         app.conf      Main app configuration file
@@ -120,12 +121,3 @@ The directory structure of a generated Revel application:
         images/       Image files
 
     tests/            Test suites
-
-
-## Help
-
-* The [Getting Started with Revel](http://revel.github.io/tutorial/gettingstarted.html).
-* The [Revel guides](http://revel.github.io/manual/index.html).
-* The [Revel sample apps](http://revel.github.io/examples/index.html).
-* The [API documentation](https://godoc.org/github.com/revel/revel).
-
