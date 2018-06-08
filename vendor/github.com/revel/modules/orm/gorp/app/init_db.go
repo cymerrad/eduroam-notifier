@@ -46,7 +46,7 @@ func (dbResult *DbGorp) InitDb(open bool) (err error) {
 		}
 	case "mysql":
 		dbResult.SqlStatementBuilder = sq.StatementBuilder.PlaceholderFormat(sq.Question)
-		dbInfo.Dialect = gorp.MySQLDialect{}
+		dbInfo.Dialect = gorp.MySQLDialect{"InnoDB", "UTF8"}
 		if len(dbInfo.DbConnection) == 0 {
 			dbInfo.DbConnection = fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&loc=Local", dbInfo.DbUser, dbInfo.DbPassword, dbInfo.DbHost, dbInfo.DbName)
 		}
