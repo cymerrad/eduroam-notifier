@@ -23,25 +23,6 @@ func init() {
 	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
 
 	revel.OnAppStart(func() {
-		Dbm := rgorp.Db.Map
-		setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
-			for col, size := range colSizes {
-				t.ColMap(col).MaxSize = size
-			}
-		}
-
-		t := Dbm.AddTable(models.User{}).SetKeys(true, "UserId")
-		t.ColMap("Password").Transient = true
-		setColumnSizes(t, map[string]int{
-			"Username": 20,
-			"Name":     100,
-		})
-
-		_ = Dbm.AddTable(models.Event{})
-
-		rgorp.Db.TraceOn(revel.AppLog)
-		Dbm.CreateTables()
-
 		bcryptPassword, _ := bcrypt.GenerateFromPassword(
 			[]byte("demo"), bcrypt.DefaultCost)
 		demoUser := &models.User{0, "Demo User", "demo", "demo", bcryptPassword}
@@ -93,6 +74,7 @@ var InitDb = func() {
 	// Defines the table for use by GORP
 	// This is a function we will create soon.
 	defineEventTable(Dbm)
+	defineUserTable(Dbm)
 	if err := Dbm.CreateTablesIfNotExists(); err != nil {
 		revel.ERROR.Fatal(err)
 	}
@@ -100,6 +82,19 @@ var InitDb = func() {
 
 func defineEventTable(dbm *gorp.DbMap) {
 	// set "id" as primary key and autoincrement
-	tE := dbm.AddTable(models.Event{}).SetKeys(true, "id")
-	tE.ColMap("name").SetMaxSize(25)
+	_ = dbm.AddTable(models.Event{})
+}
+
+func defineUserTable(dbm *gorp.DbMap) {
+	setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
+		for col, size := range colSizes {
+			t.ColMap(col).MaxSize = size
+		}
+	}
+	t := Dbm.AddTable(models.User{}).SetKeys(true, "UserId")
+	t.ColMap("Password").Transient = true
+	setColumnSizes(t, map[string]int{
+		"Username": 20,
+		"Name":     100,
+	})
 }

@@ -6,13 +6,14 @@ import (
 	"eduroam-notifier/app/routes"
 	"fmt"
 
-	"github.com/revel/modules/orm/gorp/app/controllers"
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
+
+	sq "gopkg.in/Masterminds/squirrel.v1"
 )
 
 type App struct {
-	gorpController.Controller
+	GorpController
 }
 
 func (c App) Index() revel.Result {
@@ -31,7 +32,8 @@ func (c App) getUser(username string) (user *models.User) {
 	user = &models.User{}
 	fmt.Println("get user", username, c.Txn)
 
-	err := c.Txn.SelectOne(user, c.Db.SqlStatementBuilder.Select("*").From("User").Where("Username=?", username))
+	str, _, _ := sq.StatementBuilder.Select("*").From("User").Where("Username=?", username).ToSql()
+	err := c.Txn.SelectOne(user, str)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			c.Log.Error("Failed to find user")
