@@ -4,6 +4,7 @@
 #
 
 module:testrunner
+module:static
 # module:jobs
 
 
