@@ -7,6 +7,8 @@ import (
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
 	gorp "gopkg.in/gorp.v2"
+	// comment 'justifing' import
+	// _ "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -42,6 +44,9 @@ func init() {
 	// revel.OnAppStart(FillCache)
 
 	revel.OnAppStart(func() {
+		// this should be in the package, but it seems that it is outdated or maybe just simply wrong
+		// rgorp.Db.Info.Dialect = gorp.MySQLDialect{"InnoDB", "UTF8"}
+
 		Dbm := rgorp.Db.Map
 		setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
 			for col, size := range colSizes {

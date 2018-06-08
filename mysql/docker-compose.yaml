@@ -1,0 +1,14 @@
+version: '2'
+services:
+  db:
+    image: mysql:5.7.22
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=simple
+      - MYSQL_DATABASE=service
+      - MYSQL_USER=django
+      - MYSQL_PASSWORD=django
+    volumes:
+      - ./data:/var/lib/mysql
+    restart: always
