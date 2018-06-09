@@ -1,4 +1,4 @@
 CREATE DATABASE service;
-CREATE USER 'django'@'localhost' IDENTIFIED BY 'django';
-GRANT ALL ON service.* TO 'django'@'localhost';
+CREATE USER 'manager'@'localhost' IDENTIFIED BY 'manager';
+GRANT ALL ON service.* TO 'manager'@'localhost';
 FLUSH PRIVILEGES;
