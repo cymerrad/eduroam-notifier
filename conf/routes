@@ -9,7 +9,7 @@ module:static
 
 
 GET     /                                       App.Index
-GET     /                                       App.Notify
+POST    /                                       App.Notify
 GET     /index                                  App.Console
 POST    /login                                  App.Login
 GET     /logout                                 App.Logout
