@@ -25,11 +25,15 @@ func (c App) Console() revel.Result {
 }
 
 func (c App) Notify() revel.Result {
-	event, err := c.parseEvent()
+	_, err := c.parseEvent()
 	if err != nil {
 		c.Log.Error("Error parsing event")
 		c.Response.Status = http.StatusNotAcceptable
 		return c.RenderText(err.Error())
+	}
+
+	event := models.Event{
+		Body: c.Params.JSON,
 	}
 
 	if err := c.Txn.Insert(&event); err != nil {
@@ -43,10 +47,10 @@ func (c App) Notify() revel.Result {
 	return c.RenderText("success")
 }
 
-func (c App) parseEvent() (models.Event, error) {
-	event := models.Event{}
-	err := c.Params.BindJSON(&event)
-	return event, err
+func (c App) parseEvent() (models.EventParsed, error) {
+	eventP := models.EventParsed{}
+	err := c.Params.BindJSON(&eventP)
+	return eventP, err
 }
 
 func (c App) getUser(username string) (user *models.User) {

@@ -75,7 +75,8 @@ var InitDb = func() {
 
 func defineEventTable(dbm *gorp.DbMap) {
 	// set "id" as primary key and autoincrement
-	_ = dbm.AddTable(models.Event{})
+	t := dbm.AddTable(models.Event{}).SetKeys(true, "ID")
+	t.ColMap("Body").SetNotNull(true)
 }
 
 func defineUserTable(dbm *gorp.DbMap) {
@@ -84,7 +85,7 @@ func defineUserTable(dbm *gorp.DbMap) {
 			t.ColMap(col).MaxSize = size
 		}
 	}
-	t := Dbm.AddTable(models.User{}).SetKeys(true, "UserId")
+	t := dbm.AddTable(models.User{}).SetKeys(true, "UserId")
 	t.ColMap("Password").Transient = true
 	setColumnSizes(t, map[string]int{
 		"Username": 20,
