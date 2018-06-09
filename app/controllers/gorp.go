@@ -5,8 +5,6 @@ import (
 
 	"github.com/coopernurse/gorp"
 	"github.com/revel/revel"
-
-	sq "gopkg.in/Masterminds/squirrel.v1"
 )
 
 var (
@@ -15,8 +13,7 @@ var (
 
 type GorpController struct {
 	*revel.Controller
-	SqlStatementBuilder sq.StatementBuilderType
-	Txn                 *gorp.Transaction
+	Txn *gorp.Transaction
 }
 
 func (c *GorpController) Begin() revel.Result {

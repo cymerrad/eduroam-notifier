@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"eduroam-notifier/app/models"
 	"eduroam-notifier/app/routes"
-	"fmt"
 
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
@@ -30,15 +29,16 @@ func (c App) Notify() revel.Result {
 
 func (c App) getUser(username string) (user *models.User) {
 	user = &models.User{}
-	fmt.Println("get user", username, c.Txn)
+	c.Log.Debugf("Get user %s %v", username, c.Txn)
 
-	str, _, err := sq.StatementBuilder.Select("*").From("User").Where("Username='?'", username).ToSql()
+	str, _, err := sq.StatementBuilder.Select("*").From("User").Where(sq.Eq{"Username": username}).ToSql()
 	if err != nil {
-		c.Log.Error("Failed to build query")
+		c.Log.Errorf("Failed to build query")
 		return nil
 	}
-	err = c.Txn.SelectOne(user, str)
+	err = c.Txn.SelectOne(user, str, username) // why do I have to pass the 'username' second time?
 	if err != nil {
+		c.Log.Debugf("Failed query: %s; (%v)", str, user)
 		if err != sql.ErrNoRows {
 			c.Log.Error("Failed to find user")
 		}

@@ -22,14 +22,7 @@ func init() {
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
 	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
 
-	revel.OnAppStart(func() {
-		bcryptPassword, _ := bcrypt.GenerateFromPassword(
-			[]byte("demo"), bcrypt.DefaultCost)
-		demoUser := &models.User{0, "Demo User", "demo", "demo", bcryptPassword}
-		if err := Dbm.Insert(demoUser); err != nil {
-			panic(err)
-		}
-	}, 5)
+	revel.OnAppStart(createTestUsers, 5)
 }
 
 func getParamString(param string, defaultValue string) string {
@@ -97,4 +90,21 @@ func defineUserTable(dbm *gorp.DbMap) {
 		"Username": 20,
 		"Name":     100,
 	})
+}
+
+func createTestUsers() {
+	dUser := &models.User{}
+	res, err := Dbm.Select(dUser, "Select * from User where Username='demo' limit 1;")
+	if err != nil || len(res) == 0 {
+		// doesn't exist -> create
+		bcryptPassword, _ := bcrypt.GenerateFromPassword(
+			[]byte("demo"), bcrypt.DefaultCost)
+		demoUser := &models.User{0, "Demo User", "demo", "demo", bcryptPassword}
+		if err := Dbm.Insert(demoUser); err != nil {
+			panic(err)
+		}
+		revel.AppLog.Info("Created user 'demo'.")
+		return
+	}
+	revel.AppLog.Info("User 'demo' already exists.")
 }
