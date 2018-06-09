@@ -32,8 +32,12 @@ func (c App) getUser(username string) (user *models.User) {
 	user = &models.User{}
 	fmt.Println("get user", username, c.Txn)
 
-	str, _, _ := sq.StatementBuilder.Select("*").From("User").Where("Username=?", username).ToSql()
-	err := c.Txn.SelectOne(user, str)
+	str, _, err := sq.StatementBuilder.Select("*").From("User").Where("Username='?'", username).ToSql()
+	if err != nil {
+		c.Log.Error("Failed to build query")
+		return nil
+	}
+	err = c.Txn.SelectOne(user, str)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			c.Log.Error("Failed to find user")
