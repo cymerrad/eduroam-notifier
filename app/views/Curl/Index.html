@@ -2,7 +2,30 @@
 {{template "header.html" .}}
 
 <div class="container">
-    <h1><mark>TODO</mark></h1>
+    <h2>Send a JSON like a Greylog would:</h2>
+    <form method="POST" class="form" action="{{url "Curl.Notify"}}">
+        <div class="form-group">
+            <label for="json">JSON:</label>
+            <textarea name="json" class="form-control" rows="10" id="json"></textarea>
+
+            <button type="submit" class="btn btn-default">Submit</button>
+        </div> 
+    </form>
 </div>
+
+<div class="container">
+    <h2>The example event will have the following effect:</h2>
+    {{if .curl}}
+    <p>{{ .curl.Output }}</p>
+    {{else}}
+    <p>Awaiting...</p>
+    {{end}}
+</div>
+
+{{if .curl}}
+<script>
+    $("#json").val("{{.curl.Input}}")
+</script>
+{{end}}
 
 {{template "footer.html" .}}

@@ -40,7 +40,7 @@ func (c Notifier) Notify() revel.Result {
 			continue
 		}
 
-		c.Log.Debugf("Success inserting %#v", event)
+		c.Log.Debugf("Success inserting event ID %d", event.ID)
 
 	}
 
