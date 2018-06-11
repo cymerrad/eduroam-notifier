@@ -6,9 +6,9 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=simple
-      - MYSQL_DATABASE=service
-      - MYSQL_USER=django
-      - MYSQL_PASSWORD=django
+      - MYSQL_DATABASE=eduroam
+      - MYSQL_USER=manager
+      - MYSQL_PASSWORD=manager
     volumes:
       - ./data:/var/lib/mysql
     restart: always
