@@ -17,6 +17,10 @@ type App struct {
 }
 
 func (c App) Index() revel.Result {
+	if c.connected() != nil {
+		return c.Redirect(routes.App.Console())
+	}
+	c.Flash.Error("Login required.")
 	return c.Render()
 }
 
@@ -45,6 +49,16 @@ func (c App) Notify() revel.Result {
 	c.Log.Debugf("Success inserting %#v", event)
 
 	return c.RenderText("success")
+}
+
+func (c App) connected() *models.User {
+	if c.ViewArgs["user"] != nil {
+		return c.ViewArgs["user"].(*models.User)
+	}
+	if username, ok := c.Session["user"]; ok {
+		return c.getUser(username)
+	}
+	return nil
 }
 
 func (c App) parseEvent() (models.EventParsed, error) {
