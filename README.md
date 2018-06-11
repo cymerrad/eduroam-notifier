@@ -1,5 +1,8 @@
 # Eduroam notifier
 
+## TODO
+1. Settings view
+
 ## Założenia
 
 Następujący input ma przerobić na spam dla użytkownika. Spamujemy tylko raz z dokładnością do MAC-adresu urządzenia. I jakoś tak raz na tydzień.
