@@ -54,12 +54,6 @@ func (c App) checkUser() revel.Result {
 	return nil
 }
 
-func (c App) parseEvent() (models.EventParsed, error) {
-	eventP := models.EventParsed{}
-	err := c.Params.BindJSON(&eventP)
-	return eventP, err
-}
-
 func (c App) getUser(username string) (user *models.User) {
 	user = &models.User{}
 
