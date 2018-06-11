@@ -18,11 +18,13 @@ import (
 
 func init() {
 	revel.OnAppStart(InitDb)
+	revel.OnAppStart(createTestUsers, 5)
+
 	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
 	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
 
-	revel.OnAppStart(createTestUsers, 5)
+	revel.InterceptMethod(App.AddUser, revel.BEFORE)
 }
 
 func getParamString(param string, defaultValue string) string {

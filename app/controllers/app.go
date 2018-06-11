@@ -51,6 +51,13 @@ func (c App) Notify() revel.Result {
 	return c.RenderText("success")
 }
 
+func (c App) AddUser() revel.Result {
+	if user := c.connected(); user != nil {
+		c.ViewArgs["user"] = user
+	}
+	return nil
+}
+
 func (c App) connected() *models.User {
 	if c.ViewArgs["user"] != nil {
 		return c.ViewArgs["user"].(*models.User)
