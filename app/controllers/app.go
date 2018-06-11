@@ -60,7 +60,6 @@ func (c App) parseEvent() (models.EventParsed, error) {
 
 func (c App) getUser(username string) (user *models.User) {
 	user = &models.User{}
-	c.Log.Debugf("Get user %s %v", username, c.Txn)
 
 	str, _, err := sq.StatementBuilder.Select("*").From("User").Where(sq.Eq{"Username": username}).ToSql()
 	if err != nil {

@@ -35,8 +35,6 @@ func (c Notifier) Notify() revel.Result {
 
 		if err := c.Txn.Insert(&event); err != nil {
 			c.Log.Errorf("Error inserting event into DB: %s", err.Error())
-			c.Response.Status = http.StatusNotAcceptable
-			// return c.RenderText(err.Error())
 			continue
 		}
 
@@ -44,5 +42,12 @@ func (c Notifier) Notify() revel.Result {
 
 	}
 
-	return c.RenderText("success")
+	return c.RenderText("k")
+}
+
+type ResponseAction struct {
+}
+
+func (c Notifier) interpretMessage(msg models.EventMatchingMessage) ResponseAction {
+	panic("implement me")
 }

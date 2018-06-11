@@ -10,5 +10,5 @@ services:
       - MYSQL_USER=manager
       - MYSQL_PASSWORD=manager
     volumes:
-      - ./data:/var/lib/mysql
+      - ./.data:/var/lib/mysql
     restart: always
