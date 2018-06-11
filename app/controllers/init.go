@@ -24,6 +24,7 @@ func init() {
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
 	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
 
+	// revel.InterceptMethod(App.checkUser, revel.BEFORE)
 	revel.InterceptMethod(App.AddUser, revel.BEFORE)
 }
 
@@ -35,6 +36,14 @@ func getParamString(param string, defaultValue string) string {
 		} else {
 			return defaultValue
 		}
+	}
+	return p
+}
+
+func getParamBool(param string, defaultValue bool) bool {
+	p, found := revel.Config.Bool(param)
+	if !found {
+		return defaultValue
 	}
 	return p
 }
@@ -57,6 +66,20 @@ func getConnectionString() string {
 		user, pass, protocol, host, port, dbname, dbargs)
 }
 
+var drop bool
+
+func conditionalDropTable(dbm *gorp.DbMap, tapmadl string) {
+	if !drop {
+		return
+	}
+	_, err := dbm.Exec("drop table " + tapmadl + " ;")
+	if err != nil {
+		revel.AppLog.Warnf("Error dropping '%v': %s", tapmadl, err.Error())
+		return
+	}
+	revel.AppLog.Infof("Dropped table '%v'", tapmadl)
+}
+
 var InitDb = func() {
 	connectionString := getConnectionString()
 	if db, err := sql.Open("mysql", connectionString); err != nil {
@@ -67,7 +90,8 @@ var InitDb = func() {
 			Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 	}
 	// Defines the table for use by GORP
-	// This is a function we will create soon.
+	drop = getParamBool("db.dropCreate", false)
+
 	defineEventTable(Dbm)
 	defineUserTable(Dbm)
 	if err := Dbm.CreateTablesIfNotExists(); err != nil {
@@ -76,12 +100,16 @@ var InitDb = func() {
 }
 
 func defineEventTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "Event")
+
 	// set "id" as primary key and autoincrement
 	t := dbm.AddTable(models.Event{}).SetKeys(true, "ID")
 	t.ColMap("Body").SetNotNull(true)
 }
 
 func defineUserTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "User")
+
 	setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
 		for col, size := range colSizes {
 			t.ColMap(col).MaxSize = size

@@ -44,6 +44,14 @@ func (c App) connected() *models.User {
 	return nil
 }
 
+func (c App) checkUser() revel.Result {
+	if user := c.connected(); user == nil {
+		c.Flash.Error("Please log in first")
+		return c.Redirect(routes.App.Index())
+	}
+	return nil
+}
+
 func (c App) parseEvent() (models.EventParsed, error) {
 	eventP := models.EventParsed{}
 	err := c.Params.BindJSON(&eventP)
