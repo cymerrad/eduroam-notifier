@@ -45,7 +45,7 @@ func (c Notifier) Notify() revel.Result {
 	return c.RenderText("k")
 }
 
-func (c App) parseEvent() (models.EventParsed, error) {
+func (c Notifier) parseEvent() (models.EventParsed, error) {
 	eventP := models.EventParsed{}
 	err := c.Params.BindJSON(&eventP)
 	return eventP, err

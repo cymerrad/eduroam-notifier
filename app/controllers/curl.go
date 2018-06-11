@@ -42,8 +42,18 @@ func (c Curl) Notify() revel.Result {
 
 	c.ViewArgs["curl"] = curlData{
 		Input:  string(prettiedUp),
-		Output: "Previous input was " + c.Params.Get("json"),
+		Output: c.dryRun(rawJSON),
 	}
 
 	return c.RenderTemplate("Curl/Index.html")
+}
+
+func (c Curl) dryRun(rawJSON string) string {
+
+	return `__        ___ _                       _ 
+\ \      / (_) |_ _ __   ___  ___ ___| |
+ \ \ /\ / /| | __| '_ \ / _ \/ __/ __| |
+  \ V  V / | | |_| | | |  __/\__ \__ \_|
+   \_/\_/  |_|\__|_| |_|\___||___/___(_)
+                                        `
 }

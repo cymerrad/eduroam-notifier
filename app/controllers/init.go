@@ -26,6 +26,7 @@ func init() {
 
 	// revel.InterceptMethod(App.checkUser, revel.BEFORE)
 	revel.InterceptMethod(App.AddUser, revel.BEFORE)
+	revel.InterceptMethod(Curl.checkUser, revel.BEFORE)
 }
 
 func getParamString(param string, defaultValue string) string {

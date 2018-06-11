@@ -19,7 +19,6 @@ func (c App) Index() revel.Result {
 	if c.connected() != nil {
 		return c.Redirect(routes.App.Console())
 	}
-	c.Flash.Error("Login required.")
 	return c.Render()
 }
 
