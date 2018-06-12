@@ -42,7 +42,9 @@ func (c Notifier) Notify() revel.Result {
 			continue
 		}
 
-		c.Log.Debugf("Success inserting message %#v", msg)
+		c.Log.Debugf("Success inserting message %#v", msg, settings)
+
+		interpretMessage(msg, settings)
 
 	}
 
@@ -58,8 +60,8 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 type ResponseAction struct {
 }
 
-func interpretMessage(msg models.Message, settings models.NotifierSettings) ResponseAction {
-	revel.AppLog.Debugf("Doing something magical with %#v", msg)
+func interpretMessage(msg models.Message, stg models.NotifierSettings) ResponseAction {
+	revel.AppLog.Debugf("Doing something magical with %#v under settings %#v", msg, stg)
 
 	return ResponseAction{}
 }

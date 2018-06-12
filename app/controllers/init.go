@@ -141,7 +141,7 @@ func defineNotifierTables(dbm *gorp.DbMap) {
 	t1 := dbm.AddTable(models.NotifierRule{}).SetKeys(true, "ID")
 	t := dbm.AddTable(models.NotifierSettings{})
 
-	revel.AppLog.Debugf("Experimenting with %v %v", t1, t)
+	t, t1 = t1, t // so the compiler won't complain
 }
 
 func createTestUsers() {
