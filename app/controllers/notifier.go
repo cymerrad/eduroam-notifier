@@ -3,6 +3,7 @@ package controllers
 import (
 	"eduroam-notifier/app/models"
 	"net/http"
+	"time"
 
 	"github.com/revel/revel"
 )
@@ -14,6 +15,8 @@ type Notifier struct {
 var settings models.NotifierSettings
 
 func (c Notifier) Notify() revel.Result {
+	now := time.Now()
+
 	parsedEvent, err := c.parseEvent()
 	if err != nil {
 		c.Log.Error("Error parsing event")
@@ -21,24 +24,30 @@ func (c Notifier) Notify() revel.Result {
 		return c.RenderText(err.Error())
 	}
 
-	for _, message := range parsedEvent.CheckResult.MatchingMessages {
-		sourceUser := message.Fields.SourceUser
-		sourceMac := message.Fields.SourceMac
-		timestamp := message.Timestamp
+	event := models.Event{
+		Body:      c.Params.JSON,
+		Timestamp: now,
+	}
+	if err := c.Txn.Insert(&event); err != nil {
+		c.Log.Errorf("Error inserting event into DB: %s", err.Error())
+		c.Response.Status = http.StatusInternalServerError
+		return c.RenderText(":c")
+	}
 
-		event := models.Event{
-			Body:      c.Params.JSON,
-			Mac:       sourceMac,
-			Username:  sourceUser,
-			Timestamp: timestamp,
+	for _, message := range parsedEvent.CheckResult.MatchingMessages {
+		msg := models.Message{
+			EventMessageFields: message.Fields,
+			ID:                 message.ID,
+			Message:            message.Message,
+			Timestamp:          message.Timestamp,
 		}
 
-		if err := c.Txn.Insert(&event); err != nil {
+		if err := c.Txn.Insert(&msg); err != nil {
 			c.Log.Errorf("Error inserting event into DB: %s", err.Error())
 			continue
 		}
 
-		c.Log.Debugf("Success inserting event ID %d", event.ID)
+		c.Log.Debugf("Success inserting message %#v", msg)
 
 	}
 
@@ -54,12 +63,8 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 type ResponseAction struct {
 }
 
-func interpretMessage(msg models.EventMatchingMessage, settings models.NotifierSettings) ResponseAction {
-	sourceUser := msg.Fields.SourceUser
-	sourceMac := msg.Fields.SourceMac
-	timestamp := msg.Timestamp
-
-	revel.AppLog.Debugf("Doing something magical with %s %s %#v %#v", sourceUser, sourceMac, timestamp, msg.Fields)
+func interpretMessage(msg models.Message, settings models.NotifierSettings) ResponseAction {
+	revel.AppLog.Debugf("Doing something magical with %#v", msg)
 
 	return ResponseAction{}
 }

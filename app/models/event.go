@@ -9,11 +9,7 @@ import (
 )
 
 type Event struct {
-	ID       int
-	Username string
-	Mac      string
-	Message  string
-
+	ID        int
 	Timestamp time.Time
 	Body      []byte
 }
@@ -100,12 +96,12 @@ type EventMessageFields struct {
 	SourceMac      string `json:"source-mac"`
 	Pesel          string `json:"Pesel"`
 	Username       string `json:"Username"`
-	USERNAME       string `json:"USERNAME"`
-	Action         string `json:"action"`
-	Client         string `json:"client"`
-	Gl2SourceNode  string `json:"gl2_source_node"`
-	Facility       string `json:"facility"`
-	Realm          string `json:"Realm"`
+	// USERNAME       string `json:"USERNAME"`
+	Action        string `json:"action"`
+	Client        string `json:"client"`
+	Gl2SourceNode string `json:"gl2_source_node"`
+	Facility      string `json:"facility"`
+	Realm         string `json:"Realm"`
 }
 
 func (u *Event) String() string {
@@ -121,12 +117,7 @@ func (u *Event) Parse() (EventParsed, error) {
 const mediumblobMaxSize = 16777215
 
 func (u *Event) Validate(v *revel.Validation) {
-	v.Required(u.Username)
-	v.Required(u.Mac)
 	v.Required(u.Body)
-
-	v.MacAddr(u.Mac)
-
 	v.MaxSize(u.Body, mediumblobMaxSize)
 	if _, err := u.Parse(); err != nil {
 		v.ValidationResult(false).Message(err.Error())

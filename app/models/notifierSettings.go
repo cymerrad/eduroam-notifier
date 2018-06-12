@@ -1,10 +1,10 @@
 package models
 
 type NotifierSettings struct {
-	Rules []*NotifierRule
 }
 
 type NotifierRule struct {
+	ID       int
 	On, Do   string
 	Template []byte
 }

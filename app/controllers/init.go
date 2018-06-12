@@ -95,8 +95,11 @@ var InitDb = func() {
 
 	defineEventTable(Dbm)
 	defineUserTable(Dbm)
+	defineMessageTable(Dbm)
+	defineNotifierTables(Dbm)
+
 	if err := Dbm.CreateTablesIfNotExists(); err != nil {
-		revel.ERROR.Fatal(err)
+		revel.AppLog.Panic(err.Error())
 	}
 }
 
@@ -106,6 +109,14 @@ func defineEventTable(dbm *gorp.DbMap) {
 	// set "id" as primary key and autoincrement
 	t := dbm.AddTable(models.Event{}).SetKeys(true, "ID")
 	t.ColMap("Body").SetNotNull(true)
+}
+
+func defineMessageTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "Message")
+
+	// set "id" as primary key and autoincrement
+	t := dbm.AddTable(models.Message{}).SetKeys(false, "ID")
+	revel.AppLog.Infof("What's this %#v", t)
 }
 
 func defineUserTable(dbm *gorp.DbMap) {
@@ -128,7 +139,7 @@ func defineNotifierTables(dbm *gorp.DbMap) {
 	conditionalDropTable(dbm, "NotifierRule")
 	conditionalDropTable(dbm, "NotifierSettings")
 
-	t1 := dbm.AddTable(models.NotifierRule{})
+	t1 := dbm.AddTable(models.NotifierRule{}).SetKeys(true, "ID")
 	t := dbm.AddTable(models.NotifierSettings{})
 
 	revel.AppLog.Debugf("Experimenting with %v %v", t1, t)
