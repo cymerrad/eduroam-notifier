@@ -1,6 +1,7 @@
 package models
 
 type NotifierSettings struct {
+	Something string
 }
 
 type NotifierRule struct {

@@ -11,7 +11,12 @@ type Message struct {
 	ID        string
 	Message   string
 	Timestamp time.Time
-	EventMessageFields
+	Mac       string
+	Pesel     string
+	Username  string
+	Action    string
+	Realm     string
+	Facility  string
 }
 
 func (u *Message) String() string {
@@ -20,4 +25,6 @@ func (u *Message) String() string {
 
 func (u *Message) Validate(v *revel.Validation) {
 	v.Required(u.Message)
+
+	v.MacAddr(u.Mac)
 }

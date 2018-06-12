@@ -99,7 +99,7 @@ var InitDb = func() {
 	defineNotifierTables(Dbm)
 
 	if err := Dbm.CreateTablesIfNotExists(); err != nil {
-		revel.AppLog.Panic(err.Error())
+		revel.AppLog.Fatalf("Creating tables: %s", err.Error())
 	}
 }
 
@@ -115,8 +115,7 @@ func defineMessageTable(dbm *gorp.DbMap) {
 	conditionalDropTable(dbm, "Message")
 
 	// set "id" as primary key and autoincrement
-	t := dbm.AddTable(models.Message{}).SetKeys(false, "ID")
-	revel.AppLog.Infof("What's this %#v", t)
+	_ = dbm.AddTable(models.Message{}).SetKeys(false, "ID")
 }
 
 func defineUserTable(dbm *gorp.DbMap) {

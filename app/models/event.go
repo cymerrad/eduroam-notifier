@@ -77,7 +77,7 @@ type EventParsed struct {
 
 type EventMatchingMessage struct {
 	Index     string             `json:"index"`
-	Message   string             `json:"message"`
+	Message   string             `json:"m"`
 	Fields    EventMessageFields `json:"fields"`
 	ID        string             `json:"id"`
 	Timestamp time.Time          `json:"timestamp"`
@@ -96,12 +96,12 @@ type EventMessageFields struct {
 	SourceMac      string `json:"source-mac"`
 	Pesel          string `json:"Pesel"`
 	Username       string `json:"Username"`
-	// USERNAME       string `json:"USERNAME"`
-	Action        string `json:"action"`
-	Client        string `json:"client"`
-	Gl2SourceNode string `json:"gl2_source_node"`
-	Facility      string `json:"facility"`
-	Realm         string `json:"Realm"`
+	USERNAME       string `json:"USERNAME"`
+	Action         string `json:"action"`
+	Client         string `json:"client"`
+	Gl2SourceNode  string `json:"gl2_source_node"`
+	Facility       string `json:"facility"`
+	Realm          string `json:"Realm"`
 }
 
 func (u *Event) String() string {
@@ -124,4 +124,18 @@ func (u *Event) Validate(v *revel.Validation) {
 		return
 	}
 	v.ValidationResult(true)
+}
+
+func (m *EventMatchingMessage) ToMessage() Message {
+	return Message{
+		ID:        m.ID,
+		Message:   m.Message,
+		Timestamp: m.Timestamp,
+		Pesel:     m.Fields.Pesel,
+		Username:  m.Fields.SourceUser,
+		Mac:       m.Fields.SourceMac,
+		Action:    m.Fields.Action,
+		Realm:     m.Fields.Realm,
+		Facility:  m.Fields.Facility,
+	}
 }
