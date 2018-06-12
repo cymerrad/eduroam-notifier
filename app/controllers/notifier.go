@@ -54,9 +54,12 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 type ResponseAction struct {
 }
 
-func interpretMessage(msg models.EventMatchingMessage) ResponseAction {
+func interpretMessage(msg models.EventMatchingMessage, settings models.NotifierSettings) ResponseAction {
 	sourceUser := msg.Fields.SourceUser
 	sourceMac := msg.Fields.SourceMac
 	timestamp := msg.Timestamp
 
+	revel.AppLog.Debugf("Doing something magical with %s %s %#v %#v", sourceUser, sourceMac, timestamp, msg.Fields)
+
+	return ResponseAction{}
 }

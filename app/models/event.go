@@ -9,9 +9,11 @@ import (
 )
 
 type Event struct {
-	ID        int
-	Username  string
-	Mac       string
+	ID       int
+	Username string
+	Mac      string
+	Message  string
+
 	Timestamp time.Time
 	Body      []byte
 }
@@ -78,30 +80,32 @@ type EventParsed struct {
 }
 
 type EventMatchingMessage struct {
-	Index   string `json:"index"`
-	Message string `json:"message"`
-	Fields  struct {
-		Level          int    `json:"level"`
-		Gl2RemoteIP    string `json:"gl2_remote_ip"`
-		Gl2RemotePort  int    `json:"gl2_remote_port"`
-		SourceUser     string `json:"source-user"`
-		Gl2SourceInput string `json:"gl2_source_input"`
-		EDUROAMACT     string `json:"EDUROAM_ACT"`
-		WINDOWSMAC     string `json:"WINDOWSMAC"`
-		SourceMac      string `json:"source-mac"`
-		Pesel          string `json:"Pesel"`
-		Username       string `json:"Username"`
-		USERNAME       string `json:"USERNAME"`
-		Action         string `json:"action"`
-		Client         string `json:"client"`
-		Gl2SourceNode  string `json:"gl2_source_node"`
-		Facility       string `json:"facility"`
-		Realm          string `json:"Realm"`
-	} `json:"fields"`
-	ID        string    `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
-	Source    string    `json:"source"`
-	StreamIds []string  `json:"stream_ids"`
+	Index     string             `json:"index"`
+	Message   string             `json:"message"`
+	Fields    EventMessageFields `json:"fields"`
+	ID        string             `json:"id"`
+	Timestamp time.Time          `json:"timestamp"`
+	Source    string             `json:"source"`
+	StreamIds []string           `json:"stream_ids"`
+}
+
+type EventMessageFields struct {
+	Level          int    `json:"level"`
+	Gl2RemoteIP    string `json:"gl2_remote_ip"`
+	Gl2RemotePort  int    `json:"gl2_remote_port"`
+	SourceUser     string `json:"source-user"`
+	Gl2SourceInput string `json:"gl2_source_input"`
+	EDUROAMACT     string `json:"EDUROAM_ACT"`
+	WINDOWSMAC     string `json:"WINDOWSMAC"`
+	SourceMac      string `json:"source-mac"`
+	Pesel          string `json:"Pesel"`
+	Username       string `json:"Username"`
+	USERNAME       string `json:"USERNAME"`
+	Action         string `json:"action"`
+	Client         string `json:"client"`
+	Gl2SourceNode  string `json:"gl2_source_node"`
+	Facility       string `json:"facility"`
+	Realm          string `json:"Realm"`
 }
 
 func (u *Event) String() string {
