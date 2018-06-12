@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/coopernurse/gorp"
+	"github.com/go-gorp/gorp"
 	"golang.org/x/crypto/bcrypt"
 
 	// comment justifing import
