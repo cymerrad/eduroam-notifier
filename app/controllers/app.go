@@ -8,11 +8,12 @@ import (
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/revel/modules/orm/gorp/app/controllers"
 	sq "gopkg.in/Masterminds/squirrel.v1"
 )
 
 type App struct {
-	GorpController
+	gorpController.Controller
 }
 
 func (c App) Index() revel.Result {
@@ -56,12 +57,8 @@ func (c App) checkUser() revel.Result {
 func (c App) getUser(username string) (user *models.User) {
 	user = &models.User{}
 
-	str, _, err := sq.StatementBuilder.Select("*").From("User").Where(sq.Eq{"Username": username}).ToSql()
-	if err != nil {
-		c.Log.Errorf("Failed to build query")
-		return nil
-	}
-	err = c.Txn.SelectOne(user, str, username) // why do I have to pass the 'username' second time?
+	str := c.Db.SqlStatementBuilder.Select("*").From("User").Where(sq.Eq{"Username": username})
+	err := c.Txn.SelectOne(user, str) // why do I have to pass the 'username' second time?
 	if err != nil {
 		c.Log.Debugf("Failed query: %s; (%v)", str, user)
 		if err != sql.ErrNoRows {
