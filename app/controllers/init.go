@@ -124,6 +124,16 @@ func defineUserTable(dbm *gorp.DbMap) {
 	})
 }
 
+func defineNotifierTables(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "NotifierRule")
+	conditionalDropTable(dbm, "NotifierSettings")
+
+	t1 := dbm.AddTable(models.NotifierRule{})
+	t := dbm.AddTable(models.NotifierSettings{})
+
+	revel.AppLog.Debugf("Experimenting with %v %v", t1, t)
+}
+
 func createTestUsers() {
 	dUser := &models.User{}
 	res, err := Dbm.Select(dUser, "Select * from User where Username='demo' limit 1;")

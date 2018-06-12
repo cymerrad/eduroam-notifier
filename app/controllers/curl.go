@@ -11,7 +11,7 @@ type Curl struct {
 	App
 }
 
-type curlData struct {
+type CurlData struct {
 	Input, Output string
 }
 
@@ -27,7 +27,7 @@ func (c Curl) Notify() revel.Result {
 		if strings.HasPrefix(err.Error(), `invalid character '\''`) {
 			c.Validation.Error("Use double quotes instead of single quotes.")
 		} else {
-			c.Validation.Error(err.Error())
+			c.Validation.Error("Parsing returned this: %s", err.Error()) // FIXME REVEL HAS SOME PROBLEM WITH THIS LINE WITHOUT THE STRING
 		}
 	}
 
@@ -40,7 +40,7 @@ func (c Curl) Notify() revel.Result {
 
 	prettiedUp, _ := json.MarshalIndent(input, "", "  ")
 
-	c.ViewArgs["curl"] = curlData{
+	c.ViewArgs["curl"] = CurlData{
 		Input:  string(prettiedUp),
 		Output: c.dryRun(rawJSON),
 	}
@@ -49,11 +49,12 @@ func (c Curl) Notify() revel.Result {
 }
 
 func (c Curl) dryRun(rawJSON string) string {
+	return witness
+}
 
-	return `__        ___ _                       _ 
+const witness = `__        ___ _                       _ 
 \ \      / (_) |_ _ __   ___  ___ ___| |
  \ \ /\ / /| | __| '_ \ / _ \/ __/ __| |
   \ V  V / | | |_| | | |  __/\__ \__ \_|
    \_/\_/  |_|\__|_| |_|\___||___/___(_)
                                         `
-}
