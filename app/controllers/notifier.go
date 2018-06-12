@@ -54,6 +54,9 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 type ResponseAction struct {
 }
 
-func (c Notifier) interpretMessage(msg models.EventMatchingMessage) ResponseAction {
-	panic("implement me")
+func interpretMessage(msg models.EventMatchingMessage) ResponseAction {
+	sourceUser := msg.Fields.SourceUser
+	sourceMac := msg.Fields.SourceMac
+	timestamp := msg.Timestamp
+
 }
