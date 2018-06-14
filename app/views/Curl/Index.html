@@ -43,8 +43,9 @@
         event.preventDefault();
         if ( validate( $('#json').val() ) ) {
             $.each(VISIBLE_VALUES, (ind, elem)=>{
-                newoption = document.createElement("option");
-                newoption.text = `${elem.innerText}`;
+                newoption = document.createElement("input");
+                newoption.value = `${elem.innerText}`;
+                newoption.name = "settings-cases";
                 HIDDEN_CASES.append(newoption);
             });
 
