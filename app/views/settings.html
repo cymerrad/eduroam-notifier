@@ -2,7 +2,6 @@
     {{if .settings}}
     <h2>Settings:</h2>
         {{if .settings.Templates}}
-
             {{range .settings.Templates}}
     <div class="form-group">
         <label for="template{{.ID}}">Template message <b>ID:{{.ID}}</b></label>
@@ -13,8 +12,6 @@
         $('#template{{.ID}}').val("{{.Body}}");
     </script>  
             {{end}}
-
-
         {{end}}
 
         {{if .settings.Rules}}
@@ -23,21 +20,41 @@
     <table class="table table-hover" id="cases">
         <thead>
             <tr>
-                <th>Tag</th>
-                <th>On</th>
-                <th>Do</th>
-                <th>Value</th>
+                <!-- <th width="25%">Tag</th> -->
+                <th width="25%">On</th>
+                <th width="25%">Do</th>
+                <th width="50%">Value</th>
             </tr>
         </thead>
         <tbody>
             {{range .settings.Rules }}
             <tr>
-                <td>{{.Tag}}</td>
                 <td>{{.On}}</td>
                 <td>{{.Do}}</td>
                 <td>{{.Value}}</td>
             </tr>
             {{end}}
+            <tr>
+                <td>
+                    <select class="form-control">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                      </select>
+                </td>
+                <td>
+                    <select class="form-control">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                    </select>
+                </td>
+                <td>
+                    <textarea></textarea>
+                </td>
+            </tr>
         </tbody>
     </table>
     </div>
