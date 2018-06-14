@@ -9,4 +9,33 @@
         <label for="json">Template message:</label>
         <textarea name="template" class="form-control" rows="10" id="template"></textarea>
     </div> 
+
+    {{if .settings}}
+        {{if .settings.Rules}}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>On</th>
+                <th>Do</th>
+                <th>Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .settings.Rules }}
+            <tr>
+                <td>{{.On}}</td>
+                <td>{{.Do}}</td>
+                <td>{{.Tag}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+        {{end}}
+
+        {{if .settings.Template}}
+    <script>
+        $('#template').text("{{.settings.Template}}");
+    </script>  
+        {{end}}
+    {{end}}
 </div>

@@ -56,9 +56,14 @@
     };
 </script>
 
-{{if .curl}}
+{{if .curl.Input}}
 <script>
     $('#json').val("{{.curl.Input}}");
+</script>
+{{end}}
+
+{{if .curl.Output}}
+<script>
     $('#json-output').text("{{.curl.Output}}");
 </script>
 {{end}}

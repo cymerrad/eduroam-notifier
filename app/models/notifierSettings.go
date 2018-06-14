@@ -2,10 +2,10 @@ package models
 
 type NotifierSettings struct {
 	Something string
+	Template  []byte
 }
 
 type NotifierRule struct {
-	ID       int
-	On, Do   string
-	Template []byte
+	ID          int
+	On, Do, Tag string
 }
