@@ -19,9 +19,14 @@ type CurlData struct {
 }
 
 type SettingsData struct {
-	Templates []models.NotifierTemplate
+	Templates []BodyParsed
 	Rules     []models.NotifierRule
 	Settings  string
+}
+
+type BodyParsed struct {
+	ID   int
+	Body string
 }
 
 func (c Curl) Index() revel.Result {
@@ -82,9 +87,9 @@ func (c Curl) Notify() revel.Result {
 }
 
 func (c Curl) retrieveSettings() error {
-	var templates []models.NotifierTemplate
+	var templatesRaw []models.NotifierTemplate
 	str, _, _ := sq.StatementBuilder.Select("*").From("NotifierTemplate").ToSql()
-	_, _ = c.Txn.Select(&templates, str)
+	_, _ = c.Txn.Select(&templatesRaw, str)
 
 	var rules []models.NotifierRule
 	str2, _, _ := sq.StatementBuilder.Select("*").From("NotifierRule").ToSql()
@@ -97,8 +102,13 @@ func (c Curl) retrieveSettings() error {
 		return errors.New("no settings")
 	}
 
+	templatesParsed := make([]BodyParsed, len(templatesRaw))
+	for ind, raw := range templatesRaw {
+		templatesParsed[ind] = BodyParsed{raw.ID, string(raw.Body)}
+	}
+
 	c.ViewArgs["settings"] = SettingsData{
-		Templates: templates,
+		Templates: templatesParsed,
 		Rules:     rules,
 		Settings:  string(settings.JSON),
 	}

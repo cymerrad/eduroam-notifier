@@ -6,7 +6,7 @@ type NotifierSettings struct {
 }
 
 type NotifierSettingsParsed struct {
-	Cooldown int64
+	Cooldown int64 `json:"cooldown"`
 }
 
 type NotifierTemplate struct {
