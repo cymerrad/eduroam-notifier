@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/go-gorp/gorp"
 	"github.com/revel/revel"
 	sq "gopkg.in/Masterminds/squirrel.v1"
 )
@@ -22,7 +23,7 @@ type SettingsData struct {
 	Templates []BodyParsed
 	Rules     []models.NotifierRule
 	Settings  string
-	Schema    map[string][]string
+	Schema    string
 }
 
 type BodyParsed struct {
@@ -34,7 +35,7 @@ func (c Curl) Index() revel.Result {
 	if c.Validation.HasErrors() {
 		return c.Render()
 	}
-	err := c.retrieveSettings()
+	settings, err := retrieveSettings(c.Txn)
 	if err != nil {
 		c.Validation.Error("Error occurred: %s", err.Error())
 	}
@@ -42,6 +43,8 @@ func (c Curl) Index() revel.Result {
 		c.Validation.Keep()
 		c.FlashParams()
 	}
+
+	c.ViewArgs["settings"] = settings
 
 	return c.Render()
 }
@@ -72,7 +75,7 @@ func (c Curl) Notify() revel.Result {
 		Output: c.dryRun(rawJSON),
 	}
 
-	err = c.retrieveSettings()
+	settings, err := retrieveSettings(c.Txn)
 	if err != nil {
 		c.Validation.Error("Error occurred: %s", err.Error())
 	}
@@ -84,23 +87,25 @@ func (c Curl) Notify() revel.Result {
 		return c.Redirect(Curl.Index)
 	}
 
+	c.ViewArgs["settings"] = settings
+
 	return c.RenderTemplate("Curl/Index.html")
 }
 
-func (c Curl) retrieveSettings() error {
+func retrieveSettings(txn *gorp.Transaction) (s SettingsData, err error) {
 	var templatesRaw []models.NotifierTemplate
 	str, _, _ := sq.StatementBuilder.Select("*").From("NotifierTemplate").ToSql()
-	_, _ = c.Txn.Select(&templatesRaw, str)
+	_, _ = txn.Select(&templatesRaw, str)
 
 	var rules []models.NotifierRule
 	str2, _, _ := sq.StatementBuilder.Select("*").From("NotifierRule").ToSql()
-	_, _ = c.Txn.Select(&rules, str2)
+	_, _ = txn.Select(&rules, str2)
 
 	settings := models.NotifierSettings{}
 	str3 := "SELECT * FROM NotifierSettings WHERE ID = ( SELECT MAX(ID) FROM NotifierSettings ) LIMIT 1"
-	err := c.Txn.SelectOne(&settings, str3)
+	err = txn.SelectOne(&settings, str3)
 	if err != nil {
-		return errors.New("no settings")
+		return s, errors.New("no settings")
 	}
 
 	templatesParsed := make([]BodyParsed, len(templatesRaw))
@@ -108,14 +113,14 @@ func (c Curl) retrieveSettings() error {
 		templatesParsed[ind] = BodyParsed{raw.ID, string(raw.Body)}
 	}
 
-	c.ViewArgs["settings"] = SettingsData{
+	schemaParsed, _ := json.Marshal(schema)
+
+	return SettingsData{
 		Templates: templatesParsed,
 		Rules:     rules,
 		Settings:  string(settings.JSON),
-		Schema:    schema,
-	}
-
-	return nil
+		Schema:    string(schemaParsed),
+	}, nil
 }
 
 func (c Curl) dryRun(rawJSON string) string {
