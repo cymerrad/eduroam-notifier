@@ -46,12 +46,7 @@
                     <select class="form-control" id="on-field"></select>
                 </td>
                 <td>
-                    <select class="form-control" id="do-field">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                    </select>
+                    <select class="form-control" id="do-field"></select>
                 </td>
                 <td>
                     <textarea class="form-control" rows="2" style="resize: vertical; min-height: 33px;" id="value-field"></textarea>
@@ -110,7 +105,7 @@
             second = DOF.val();
             if (first && second) {
                 VALF.empty();
-                VALF.val(`{"${first}" : "INSERT",\n  "${second}":"INSERT"}`)
+                VALF.val(`{"${first}" : "${first.toUpperCase()}",\n  "${second}" : "${second.toUpperCase()}"}`)
             }
         });
 
