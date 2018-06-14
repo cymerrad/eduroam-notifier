@@ -22,6 +22,7 @@ type SettingsData struct {
 	Templates []BodyParsed
 	Rules     []models.NotifierRule
 	Settings  string
+	Schema    map[string][]string
 }
 
 type BodyParsed struct {
@@ -111,6 +112,7 @@ func (c Curl) retrieveSettings() error {
 		Templates: templatesParsed,
 		Rules:     rules,
 		Settings:  string(settings.JSON),
+		Schema:    schema,
 	}
 
 	return nil
@@ -126,3 +128,8 @@ const witness = `__        ___ _                       _
   \ V  V / | | |_| | | |  __/\__ \__ \_|
    \_/\_/  |_|\__|_| |_|\___||___/___(_)
                                         `
+
+var schema map[string][]string = map[string][]string{
+	"action":       {"send_template"},
+	"template_tag": {"substitute_with_field", "insert_text"},
+}

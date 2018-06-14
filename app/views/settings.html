@@ -23,7 +23,8 @@
                 <!-- <th width="25%">Tag</th> -->
                 <th width="25%">On</th>
                 <th width="25%">Do</th>
-                <th width="50%">Value</th>
+                <th width="45%">Value</th>
+                <th width="5%"></th>
             </tr>
         </thead>
         <tbody>
@@ -32,6 +33,11 @@
                 <td>{{.On}}</td>
                 <td>{{.Do}}</td>
                 <td>{{.Value}}</td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-danger btn-xs">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </button>
+                </td>
             </tr>
             {{end}}
             <tr>
@@ -52,7 +58,12 @@
                     </select>
                 </td>
                 <td>
-                    <textarea></textarea>
+                    <textarea class="form-control" rows="2" style="resize: vertical; min-height: 33px;"></textarea>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-success btn-xs">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
                 </td>
             </tr>
         </tbody>
