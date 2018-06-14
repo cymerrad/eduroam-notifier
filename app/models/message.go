@@ -9,6 +9,7 @@ import (
 
 type Message struct {
 	ID        string
+	EventID   int
 	Message   string
 	Timestamp time.Time
 	Mac       string

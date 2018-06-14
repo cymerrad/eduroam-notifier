@@ -126,9 +126,10 @@ func (u *Event) Validate(v *revel.Validation) {
 	v.ValidationResult(true)
 }
 
-func (m *EventMatchingMessage) ToMessage() Message {
+func (m *EventMatchingMessage) ToMessage(eventID int) Message {
 	return Message{
 		ID:        m.ID,
+		EventID:   eventID,
 		Message:   m.Message,
 		Timestamp: m.Timestamp,
 		Pesel:     m.Fields.Pesel,

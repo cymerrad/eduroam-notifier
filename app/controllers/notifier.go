@@ -35,7 +35,7 @@ func (c Notifier) Notify() revel.Result {
 	}
 
 	for _, match := range parsedEvent.CheckResult.MatchingMessages {
-		msg := match.ToMessage()
+		msg := match.ToMessage(event.ID)
 
 		if err := c.Txn.Insert(&msg); err != nil {
 			c.Log.Errorf("Error inserting event into DB: %s", err.Error())
