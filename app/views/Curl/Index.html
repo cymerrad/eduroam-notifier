@@ -34,15 +34,22 @@
 </div>
 
 <script>
-    $('#json-form').submit(function(event){
-        if ( !validate( $('#json').val() ) ) {
-            event.preventDefault();
+    var FORM = $('#json-form');
+    FORM.submit(function(event){
+        if ( validate( $('#json').val() ) ) {
+            contents = FORM.serializeArray();
+            console.log(contents);
 
-            var errAlert = $('#json-error'); 
-            errAlert.show();
-            errAlert.text("Invalid JSON");
-            setTimeout(function(){errAlert.hide();}, 3000)
+            return false;
         }
+
+        // invalid
+        var errAlert = $('#json-error'); 
+        errAlert.show();
+        errAlert.text("Invalid JSON");
+        setTimeout(function(){errAlert.hide();}, 3000)
+
+        event.preventDefault();
     });
 
     function validate(text) {
