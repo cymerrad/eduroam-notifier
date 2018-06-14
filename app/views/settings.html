@@ -1,5 +1,6 @@
 <div class="container">
     {{if .settings}}
+
     <h2>Settings:</h2>
         {{if .settings.Templates}}
             {{range .settings.Templates}}
@@ -42,15 +43,10 @@
             {{end}}
             <tr>
                 <td>
-                    <select class="form-control">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                      </select>
+                    <select class="form-control" id="on-field"></select>
                 </td>
                 <td>
-                    <select class="form-control">
+                    <select class="form-control" id="do-field">
                         <option>1</option>
                         <option>2</option>
                         <option>3</option>
@@ -58,7 +54,7 @@
                     </select>
                 </td>
                 <td>
-                    <textarea class="form-control" rows="2" style="resize: vertical; min-height: 33px;"></textarea>
+                    <textarea class="form-control" rows="2" style="resize: vertical; min-height: 33px;" id="value-field"></textarea>
                 </td>
                 <td>
                     <button type="button" class="btn btn-primary btn-success btn-xs">
@@ -78,6 +74,48 @@
         $('#other').val("{{.settings.Settings}}");
     </script>  
     </div>
+
+        {{if .settings.Schema}}
+    <script>
+        var SCHEMA = JSON.parse("{{.settings.Schema}}");
+        var ONF = $('#on-field');
+        var DOF = $('#do-field');
+        var VALF = $('#value-field');
+
+        // add empty option
+        newoption = document.createElement("option");
+        ONF.append(newoption);
+
+        Object.keys(SCHEMA).forEach(key =>{
+            newoption = document.createElement("option");
+            newoption.text = `${key}`;
+            ONF.append(newoption);
+        });
+        ONF.change((event)=>{
+            key = ONF.val();
+            DOF.empty();
+
+            // add empty option
+            newoption = document.createElement("option");
+            DOF.append(newoption);
+
+            SCHEMA[key].forEach((opt) => {
+                newoption = document.createElement("option");
+                newoption.text = `${opt}`;
+                DOF.append(newoption);
+            });
+        });
+        DOF.change((event)=>{
+            first = ONF.val();
+            second = DOF.val();
+            if (first && second) {
+                VALF.empty();
+                VALF.val(`{"${first}" : "INSERT",\n  "${second}":"INSERT"}`)
+            }
+        });
+
+    </script>
+        {{end}}
 
     {{else}}
     <div class="row">
