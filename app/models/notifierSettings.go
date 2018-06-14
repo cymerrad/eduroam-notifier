@@ -1,10 +1,20 @@
 package models
 
 type NotifierSettings struct {
-	Template []byte
+	ID   int
+	JSON []byte
+}
+
+type NotifierSettingsParsed struct {
+	Cooldown int64
+}
+
+type NotifierTemplate struct {
+	ID   int
+	Body []byte
 }
 
 type NotifierRule struct {
-	ID          int
-	On, Do, Tag string
+	ID                 int
+	Tag, On, Do, Value string
 }

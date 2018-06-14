@@ -1,16 +1,22 @@
 <div class="container">
-    <div class="row">
-        <div class="span6">
-            <div class="alert alert-danger" hidden id="settings-error"></div>
-        </div>
-    </div>
+    {{if .settings}}
     <h2>Settings:</h2>
+        {{if .settings.Templates}}
+
+            {{range .settings.Templates}}
     <div class="form-group">
-        <label for="template">Template message:</label>
-        <textarea name="template" class="form-control" rows="10" id="template"></textarea>
+        <label for="template{{.ID}}">Template message:</label>
+        <textarea name="template{{.ID}}" class="form-control" rows="10" id="template{{.ID}}"></textarea>
     </div> 
 
-    {{if .settings}}
+    <script>
+        $('#template{{.ID}}').val("{{.Body}}");
+    </script>  
+            {{end}}
+
+
+        {{end}}
+
         {{if .settings.Rules}}
     <div class="form-group">
     <label for="cases">On/Do cases:</label>
@@ -35,10 +41,13 @@
     </div>
         {{end}}
 
-        {{if .settings.Template}}
-    <script>
-        $('#template').val("{{.settings.Template}}");
-    </script>  
-        {{end}}
+    {{else}}
+    <div class="row">
+        <div class="span6">
+            <div class="alert alert-danger" id="settings-error">
+                Some error occurred.
+            </div>
+        </div>
+    </div>
     {{end}}
 </div>

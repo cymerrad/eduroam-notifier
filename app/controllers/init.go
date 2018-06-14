@@ -136,12 +136,15 @@ func defineUserTable(dbm *gorp.DbMap) {
 
 func defineNotifierTables(dbm *gorp.DbMap) {
 	conditionalDropTable(dbm, "NotifierRule")
+	conditionalDropTable(dbm, "NotifierTemplate")
 	conditionalDropTable(dbm, "NotifierSettings")
 
 	t1 := dbm.AddTable(models.NotifierRule{}).SetKeys(true, "ID")
-	t := dbm.AddTable(models.NotifierSettings{})
+	t2 := dbm.AddTable(models.NotifierTemplate{}).SetKeys(true, "ID")
+	t := dbm.AddTable(models.NotifierSettings{}).SetKeys(true, "ID")
 
 	t, t1 = t1, t // so the compiler won't complain
+	t, t2 = t2, t
 }
 
 func createTestUsers() {
@@ -160,3 +163,10 @@ func createTestUsers() {
 	}
 	revel.AppLog.Info("User 'demo' already exists.")
 }
+
+// func createTestSettings() {
+// 	btz := json.Marshal(struct{})
+// 	tSettings := &models.NotifierSettings {
+// 		JSON:
+// 	}
+// }

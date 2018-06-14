@@ -19,8 +19,9 @@ type CurlData struct {
 }
 
 type SettingsData struct {
-	Template string
-	Rules    []models.NotifierRule
+	Templates []models.NotifierTemplate
+	Rules     []models.NotifierRule
+	Settings  string
 }
 
 func (c Curl) Index() revel.Result {
@@ -73,18 +74,18 @@ func (c Curl) Notify() revel.Result {
 }
 
 func (c Curl) retrieveSettings() {
-	settings := models.NotifierSettings{}
-	str, _, err := sq.StatementBuilder.Select("*").From("NotifierSettings").Limit(1).ToSql()
+	var templates []models.NotifierTemplate
+	str, _, err := sq.StatementBuilder.Select("*").From("NotifierTemplate").ToSql()
 	if err != nil {
 		c.Log.Errorf("Failed to build query")
-		c.Validation.Error("Error retrieving settings.")
+		c.Validation.Error("Error retrieving templates.")
 	} else {
-		err = c.Txn.SelectOne(&settings, str) // why do I have to pass the 'username' second time?
+		_, err = c.Txn.Select(&templates, str)
 		if err != nil {
 			if err != sql.ErrNoRows {
-				c.Log.Errorf("Failed to retrieve settings: %s", err.Error())
+				c.Log.Errorf("Failed to retrieve templates: %s", err.Error())
 			}
-			c.Validation.Error("No settings.")
+			c.Validation.Error("No templates.")
 		}
 	}
 
@@ -94,7 +95,7 @@ func (c Curl) retrieveSettings() {
 		c.Log.Errorf("Failed to build query")
 		c.Validation.Error("Error retrieving rules.")
 	} else {
-		_, err = c.Txn.Select(&rules, str2) // why do I have to pass the 'username' second time?
+		_, err = c.Txn.Select(&rules, str2)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				c.Log.Errorf("Failed to retrieve rules %s", err.Error())
@@ -103,15 +104,26 @@ func (c Curl) retrieveSettings() {
 		}
 	}
 
+	settings := models.NotifierSettings{}
+	str3 := "SELECT * FROM NotifierSettings WHERE ID = ( SELECT MAX(ID) FROM NotifierSettings ) LIMIT 1"
+	err = c.Txn.SelectOne(&settings, str3)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			c.Log.Errorf("Failed to retrieve settings: %s", err.Error())
+		}
+		c.Validation.Error("No settings.")
+	}
+
 	if c.Validation.HasErrors() {
 		c.Validation.Keep()
 		c.FlashParams()
 		return
 	}
 
-	c.ViewArgs["settings"] = SettingsData{
-		Template: string(settings.Template),
-		Rules:    rules,
+	c.ViewArgs["templates"] = SettingsData{
+		Templates: templates,
+		Rules:     rules,
+		Settings:  string(settings.JSON),
 	}
 }
 
