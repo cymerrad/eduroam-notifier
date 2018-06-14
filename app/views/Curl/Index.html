@@ -20,7 +20,7 @@
 </div>
 
 <div class="container">
-    <button type="submit" class="btn btn-lg btn-default">Submit</button>
+    <button type="submit" class="btn btn-lg btn-default" id="submit-button">Submit</button>
 </div>
 </form>
 
@@ -34,13 +34,23 @@
 </div>
 
 <script>
+    var SUBMIT_BUTTON = $('#submit-button');
     var FORM = $('#json-form');
-    FORM.submit(function(event){
-        if ( validate( $('#json').val() ) ) {
-            contents = FORM.serializeArray();
-            console.log(contents);
+    var HIDDEN_CASES = $('#settings-cases');
+    var VISIBLE_VALUES = $('#settings-value');
 
-            return false;
+    SUBMIT_BUTTON.click(function(event){
+        event.preventDefault();
+        if ( validate( $('#json').val() ) ) {
+            $.each(VISIBLE_VALUES, (ind, elem)=>{
+                newoption = document.createElement("option");
+                newoption.text = `${elem.innerText}`;
+                HIDDEN_CASES.append(newoption);
+            });
+
+            // if ok then submit the form
+            FORM.submit();
+            return
         }
 
         // invalid
@@ -48,7 +58,11 @@
         errAlert.show();
         errAlert.text("Invalid JSON");
         setTimeout(function(){errAlert.hide();}, 3000)
+    })
 
+    FORM.submit(function(event){
+        contents = FORM.serializeArray();
+        console.log("contents", contents);
         event.preventDefault();
     });
 
