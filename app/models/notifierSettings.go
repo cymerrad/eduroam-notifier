@@ -1,8 +1,7 @@
 package models
 
 type NotifierSettings struct {
-	Something string
-	Template  []byte
+	Template []byte
 }
 
 type NotifierRule struct {

@@ -6,13 +6,15 @@
     </div>
     <h2>Settings:</h2>
     <div class="form-group">
-        <label for="json">Template message:</label>
+        <label for="template">Template message:</label>
         <textarea name="template" class="form-control" rows="10" id="template"></textarea>
     </div> 
 
     {{if .settings}}
         {{if .settings.Rules}}
-    <table class="table table-hover">
+    <!-- <div class="form-group">
+    <label for="cases">On/Do cases:</label> -->
+    <table class="table table-hover" id="cases">
         <thead>
             <tr>
                 <th>On</th>
@@ -30,11 +32,12 @@
             {{end}}
         </tbody>
     </table>
+    <!-- </div> -->
         {{end}}
 
         {{if .settings.Template}}
     <script>
-        $('#template').text("{{.settings.Template}}");
+        $('#template').val("{{.settings.Template}}");
     </script>  
         {{end}}
     {{end}}
