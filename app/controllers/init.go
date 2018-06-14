@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-gorp/gorp"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +21,7 @@ import (
 func init() {
 	revel.OnAppStart(InitDb)
 	revel.OnAppStart(createTestUsers, 5)
+	revel.OnAppStart(createTestSettings, 6)
 
 	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
@@ -164,9 +167,52 @@ func createTestUsers() {
 	revel.AppLog.Info("User 'demo' already exists.")
 }
 
-// func createTestSettings() {
-// 	btz := json.Marshal(struct{})
-// 	tSettings := &models.NotifierSettings {
-// 		JSON:
-// 	}
-// }
+func createTestSettings() {
+	exampleSetting := models.NotifierSettingsParsed{
+		Cooldown: int64(7 * 24 * time.Hour),
+	}
+	exampleTemplate := models.NotifierTemplate{
+		Body: []byte(exTemp),
+	}
+	exampleRule := models.NotifierRule{
+		Do:    "null",
+		On:    "any",
+		Tag:   "any",
+		Value: "null",
+	}
+
+	btz, _ := json.MarshalIndent(exampleSetting, "", "  ")
+	demoSettings := &models.NotifierSettings{
+		JSON: btz,
+	}
+	err := Dbm.Insert(demoSettings)
+	if err != nil {
+		revel.AppLog.Errorf("Inserting settings: %s", err.Error())
+	}
+	revel.AppLog.Info("Inserted example settings.")
+
+	tTemp := &models.NotifierTemplate{}
+	res, err := Dbm.Select(tTemp, "SELECT * FROM NotifierTemplate;")
+	if err != nil || len(res) == 0 {
+		if err := Dbm.Insert(&exampleTemplate); err != nil {
+			revel.AppLog.Errorf("Inserting template: %s", err.Error())
+		}
+		revel.AppLog.Info("Created example template.")
+	}
+
+	tRule := &models.NotifierRule{}
+	res, err = Dbm.Select(tRule, "SELECT * FROM NotifierRule;")
+	if err != nil || len(res) == 0 {
+		if err := Dbm.Insert(&exampleRule); err != nil {
+			revel.AppLog.Errorf("Inserting rule: %s", err.Error())
+		}
+		revel.AppLog.Info("Created example rule.")
+	}
+
+}
+
+const exTemp = `Witam.
+Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{occurence}}.
+
+Z poważaniem,
+{{signature}}`
