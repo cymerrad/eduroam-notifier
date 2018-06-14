@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"database/sql"
 	"eduroam-notifier/app/models"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/revel/revel"
@@ -28,11 +28,15 @@ func (c Curl) Index() revel.Result {
 	if c.Validation.HasErrors() {
 		return c.Render()
 	}
-	c.retrieveSettings()
+	err := c.retrieveSettings()
+	if err != nil {
+		c.Validation.Error("Error occurred: %s", err.Error())
+	}
 	if c.Validation.HasErrors() {
 		c.Validation.Keep()
 		c.FlashParams()
 	}
+
 	return c.Render()
 }
 
@@ -62,7 +66,11 @@ func (c Curl) Notify() revel.Result {
 		Output: c.dryRun(rawJSON),
 	}
 
-	c.retrieveSettings()
+	err = c.retrieveSettings()
+	if err != nil {
+		c.Validation.Error("Error occurred: %s", err.Error())
+	}
+
 	if c.Validation.HasErrors() {
 		// Store the validation errors in the flash context and redirect.
 		c.Validation.Keep()
@@ -73,58 +81,29 @@ func (c Curl) Notify() revel.Result {
 	return c.RenderTemplate("Curl/Index.html")
 }
 
-func (c Curl) retrieveSettings() {
+func (c Curl) retrieveSettings() error {
 	var templates []models.NotifierTemplate
-	str, _, err := sq.StatementBuilder.Select("*").From("NotifierTemplate").ToSql()
-	if err != nil {
-		c.Log.Errorf("Failed to build query")
-		c.Validation.Error("Error retrieving templates.")
-	} else {
-		_, err = c.Txn.Select(&templates, str)
-		if err != nil {
-			if err != sql.ErrNoRows {
-				c.Log.Errorf("Failed to retrieve templates: %s", err.Error())
-			}
-			c.Validation.Error("No templates.")
-		}
-	}
+	str, _, _ := sq.StatementBuilder.Select("*").From("NotifierTemplate").ToSql()
+	_, _ = c.Txn.Select(&templates, str)
 
 	var rules []models.NotifierRule
-	str2, _, err := sq.StatementBuilder.Select("*").From("NotifierRule").ToSql()
-	if err != nil {
-		c.Log.Errorf("Failed to build query")
-		c.Validation.Error("Error retrieving rules.")
-	} else {
-		_, err = c.Txn.Select(&rules, str2)
-		if err != nil {
-			if err != sql.ErrNoRows {
-				c.Log.Errorf("Failed to retrieve rules %s", err.Error())
-			}
-			c.Validation.Error("No rules.")
-		}
-	}
+	str2, _, _ := sq.StatementBuilder.Select("*").From("NotifierRule").ToSql()
+	_, _ = c.Txn.Select(&rules, str2)
 
 	settings := models.NotifierSettings{}
 	str3 := "SELECT * FROM NotifierSettings WHERE ID = ( SELECT MAX(ID) FROM NotifierSettings ) LIMIT 1"
-	err = c.Txn.SelectOne(&settings, str3)
+	err := c.Txn.SelectOne(&settings, str3)
 	if err != nil {
-		if err != sql.ErrNoRows {
-			c.Log.Errorf("Failed to retrieve settings: %s", err.Error())
-		}
-		c.Validation.Error("No settings.")
+		return errors.New("no settings")
 	}
 
-	if c.Validation.HasErrors() {
-		c.Validation.Keep()
-		c.FlashParams()
-		return
-	}
-
-	c.ViewArgs["templates"] = SettingsData{
+	c.ViewArgs["settings"] = SettingsData{
 		Templates: templates,
 		Rules:     rules,
 		Settings:  string(settings.JSON),
 	}
+
+	return nil
 }
 
 func (c Curl) dryRun(rawJSON string) string {

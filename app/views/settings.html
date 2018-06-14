@@ -41,6 +41,14 @@
     </div>
         {{end}}
 
+    <div class="form-group">
+    <label for="other">Other:</label>
+    <textarea name="other" class="form-control" rows="10" id="other"></textarea>
+    <script>
+        $('#other').val("{{.settings.Settings}}");
+    </script>  
+    </div>
+
     {{else}}
     <div class="row">
         <div class="span6">
