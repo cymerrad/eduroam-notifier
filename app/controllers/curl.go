@@ -68,6 +68,8 @@ func (c Curl) Notify() revel.Result {
 		return c.Redirect(Curl.Index)
 	}
 
+	c.Log.Infof("Form: %#v", c.Params.Form)
+
 	prettiedUp, _ := json.MarshalIndent(input, "", "  ")
 
 	c.ViewArgs["curl"] = CurlData{

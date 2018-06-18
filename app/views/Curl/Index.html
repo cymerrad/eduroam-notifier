@@ -37,7 +37,7 @@
     var SUBMIT_BUTTON = $('#submit-button');
     var FORM = $('#json-form');
     var HIDDEN_CASES = $('#settings-cases');
-    var VISIBLE_VALUES = $('#settings-value');
+    var VISIBLE_VALUES = $('.settings-value'); // mind the period
 
     SUBMIT_BUTTON.click(function(event){
         event.preventDefault();
@@ -63,8 +63,9 @@
 
     FORM.submit(function(event){
         contents = FORM.serializeArray();
+        console.log("visible", VISIBLE_VALUES);
         console.log("contents", contents);
-        event.preventDefault();
+        // event.preventDefault();
     });
 
     function validate(text) {

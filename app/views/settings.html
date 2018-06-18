@@ -30,19 +30,19 @@
         </thead>
         <tbody>
             {{range .settings.Rules }}
-            <tr>
+            <tr id="rule{{.ID}}">
                 <td>{{.On}}</td>
                 <td>{{.Do}}</td>
-                <td id="settings-value">{{.Value}}</td>
+                <td class="settings-value">{{.Value}}</td>
                 <td>{{.ID}}</td>
                 <td>
-                    <button type="button" class="btn btn-primary btn-danger btn-xs">
+                    <button type="button" class="btn btn-primary btn-danger btn-xs" onclick="deleteRule('rule{{.ID}}')">
                         <span class="glyphicon glyphicon-trash"></span>
                     </button>
                 </td>
             </tr>
             {{end}}
-            <tr>
+            <tr id="adding-rule">
                 <td>
                     <select class="form-control" id="on-field"></select>
                 </td>
@@ -53,7 +53,7 @@
                     <textarea class="form-control" rows="2" style="resize: vertical; min-height: 33px;" id="value-field"></textarea>
                 </td>
                 <td>
-                    <button type="button" class="btn btn-primary btn-success btn-xs">
+                    <button type="button" class="btn btn-primary btn-success btn-xs" id="adding-rule-submit">
                         <span class="glyphicon glyphicon-plus"></span>
                     </button>
                 </td>
@@ -74,11 +74,41 @@
     <div class="hidden" id="settings-cases"></div>
 
         {{if .settings.Schema}}
+
+<script>
+    function generate(id_, on_, do_, val_) {
+    id_prop = "rule" + id_;
+    return createElement(
+        "tr",
+        { id: id_prop },
+        createElement("tr", null, "" + on_),
+        createElement("tr", null, "" + do_),
+        createElement("tr", { class: "settings-value" }, "" + val_),
+        createElement("tr", null, "" + id_),
+        createElement(
+        "tr",
+        null,
+        createElement(
+            "button",
+            {
+            type: "button",
+            class: "btn btn-primary btn-danger btn-xs",
+            onclick: "deleteRule('rule{{.ID}}')"
+            },
+            createElement("span", { class: "glyphicon glyphicon-trash" })
+        )
+        )
+    );
+    }
+</script>
+
+
     <script>
         var SCHEMA = JSON.parse("{{.settings.Schema}}");
         var ONF = $('#on-field');
         var DOF = $('#do-field');
         var VALF = $('#value-field');
+        var addRuleButton = $('#adding-rule-submit');
 
         // add empty option
         newoption = document.createElement("option");
@@ -111,6 +141,68 @@
                 VALF.val(`{"${first}" : "${first.toUpperCase()}",\n  "${second}" : "${second.toUpperCase()}"}`)
             }
         });
+
+        addRuleButton.click(() => {
+            [value_f, on_f, do_f] = [$('#value-field'), $('#on-field'), $('#do-field')];
+            value = value_f.val();
+            on_ = on_f.val();
+            do_ = do_f.val();
+            if (value && on_  && do_) {
+                
+            } else {
+                var errAlert = $('#json-error'); 
+                errAlert.show();
+                errAlert.text("None of the field can be empty.");
+                setTimeout(function(){errAlert.hide();}, 3000);
+            }
+        });
+
+        function createElement(tag, props, ...children) {
+            newEl = document.createElement(tag);
+            if (props != null) {
+                if (props.hasOwnProperty("class")) {
+                    newEl.setAttribute('class', props.class)
+                }
+                if (props.hasOwnProperty("id")) {
+                    newEl.setAttribute('id', props.id)
+                }
+                if (props.hasOwnProperty("type")) {
+                    newEl.setAttribute('type', props.type)
+                }
+                if (props.hasOwnProperty("onclick")) {
+                    newEl.setAttribute('onclick', props.onclick)
+                }
+            }
+            for (i=0; i<children.length; i++) {
+                newEl.append(children[i]);
+            }
+            return newEl;
+        }
+
+        function generate(id_, on_, do_, val_) {
+            id_prop = "rule" + id_;
+            return createElement(
+                "tr",
+                { id: id_prop },
+                createElement("tr", null, "" + on_),
+                createElement("tr", null, "" + do_),
+                createElement("tr", { class: "settings-value" }, "" + val_),
+                createElement("tr", null, "" + id_),
+                createElement(
+                "tr",
+                null,
+                createElement(
+                    "button",
+                    {
+                    type: "button",
+                    class: "btn btn-primary btn-danger btn-xs",
+                    onclick: "deleteRule('rule{{.ID}}')"
+                    },
+                    createElement("span", { class: "glyphicon glyphicon-trash" })
+                )
+                )
+            );
+        }
 
     </script>
         {{end}}
