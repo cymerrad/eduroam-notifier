@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"eduroam-notifier/app/automaton"
 	"eduroam-notifier/app/models"
 	"net/http"
 	"time"
@@ -12,9 +13,7 @@ type Notifier struct {
 	App
 }
 
-var settings models.NotifierSettings
-var rules []models.NotifierRule
-var templates []models.NotifierTemplate
+var auto *automaton.A
 
 func (c Notifier) Notify() revel.Result {
 	now := time.Now()
@@ -44,9 +43,9 @@ func (c Notifier) Notify() revel.Result {
 			continue
 		}
 
-		c.Log.Debugf("Success inserting message %#v", msg, settings)
+		c.Log.Debugf("Success inserting message %v", msg)
 
-		interpretMessage(msg, settings, rules, templates)
+		interpretMessage(msg, auto)
 
 	}
 
@@ -64,8 +63,8 @@ type ResponseAction struct {
 	Recipient, Body string
 }
 
-func interpretMessage(msg models.Message, stg models.NotifierSettings, rules []models.NotifierRule, templates []models.NotifierTemplate) ResponseAction {
-	revel.AppLog.Debugf("Doing something magical with %#v under settings %#v", msg, stg)
+func interpretMessage(msg models.Message, a *automaton.A) ResponseAction {
+	revel.AppLog.Debugf("Doing something magical with %#v", msg)
 
 	return ResponseAction{}
 }
