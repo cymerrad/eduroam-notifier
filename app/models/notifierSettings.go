@@ -15,6 +15,6 @@ type NotifierTemplate struct {
 }
 
 type NotifierRule struct {
-	ID                 int
-	Tag, On, Do, Value string
+	ID            int
+	On, Do, Value string
 }

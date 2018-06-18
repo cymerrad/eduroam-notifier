@@ -174,13 +174,20 @@ func createTestSettings() {
 	exampleTemplate := models.NotifierTemplate{
 		Body: []byte(exTemp),
 	}
-	exampleRule := models.NotifierRule{
-		Do:    "null",
-		On:    "any",
-		Tag:   "any",
-		Value: "null",
+	exampleRules := []models.NotifierRule{
+		{
+			On:    "template_tag",
+			Do:    "insert_text",
+			Value: "{\"template_tag\" : \"signature\", \"insert_text\" : \"DSK UW\"}",
+		},
+		{
+			On:    "template_tag",
+			Do:    "substitute_with_field",
+			Value: "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
+		},
 	}
 
+	// insert if not existent... or not... it depends
 	btz, _ := json.MarshalIndent(exampleSetting, "", "  ")
 	demoSettings := &models.NotifierSettings{
 		JSON: btz,
@@ -203,10 +210,14 @@ func createTestSettings() {
 	tRule := &models.NotifierRule{}
 	res, err = Dbm.Select(tRule, "SELECT * FROM NotifierRule;")
 	if err != nil || len(res) == 0 {
-		if err := Dbm.Insert(&exampleRule); err != nil {
-			revel.AppLog.Errorf("Inserting rule: %s", err.Error())
+		for _, rule := range exampleRules {
+			err := Dbm.Insert(&rule)
+			if err != nil {
+				revel.AppLog.Errorf("Inserting rule %s: %s", rule.Value, err.Error())
+			}
 		}
-		revel.AppLog.Info("Created example rule.")
+
+		revel.AppLog.Infof("Created %d rules", len(exampleRules))
 	}
 
 }
