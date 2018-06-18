@@ -171,6 +171,12 @@ func createTestSettings() {
 	exampleSetting := models.NotifierSettingsParsed{
 		Cooldown: int64(7 * 24 * time.Hour),
 	}
+
+	const exTemp = `Witam.
+Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{occurence}}.
+
+Z poważaniem,
+{{signature}}`
 	exampleTemplate := models.NotifierTemplate{
 		Body: []byte(exTemp),
 	}
@@ -222,8 +228,13 @@ func createTestSettings() {
 
 }
 
-const exTemp = `Witam.
-Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{occurence}}.
-
-Z poważaniem,
-{{signature}}`
+func initializeGlobalVariables() {
+	var chillax = func(res []interface{}, err error) {
+		if err != nil {
+			revel.AppLog.Errorf("Failed initialization: %s", err.Error())
+		}
+	}
+	chillax(Dbm.Select(&templates, "SELECT * FROM NotifierTemplate;"))
+	chillax(Dbm.Select(&rules, "SELECT * FROM NotifierRule;"))
+	chillax(Dbm.Select(&settings, "SELECT * FROM NotifierSettings;"))
+}

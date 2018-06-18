@@ -14,6 +14,7 @@ type Notifier struct {
 
 var settings models.NotifierSettings
 var rules []models.NotifierRule
+var templates []models.NotifierTemplate
 
 func (c Notifier) Notify() revel.Result {
 	now := time.Now()
@@ -45,7 +46,7 @@ func (c Notifier) Notify() revel.Result {
 
 		c.Log.Debugf("Success inserting message %#v", msg, settings)
 
-		interpretMessage(msg, settings, rules)
+		interpretMessage(msg, settings, rules, templates)
 
 	}
 
@@ -58,10 +59,12 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 	return eventP, err
 }
 
+// send mail
 type ResponseAction struct {
+	Recipient, Body string
 }
 
-func interpretMessage(msg models.Message, stg models.NotifierSettings, rules []models.NotifierRule) ResponseAction {
+func interpretMessage(msg models.Message, stg models.NotifierSettings, rules []models.NotifierRule, templates []models.NotifierTemplate) ResponseAction {
 	revel.AppLog.Debugf("Doing something magical with %#v under settings %#v", msg, stg)
 
 	return ResponseAction{}
