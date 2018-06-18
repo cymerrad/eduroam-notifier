@@ -18,7 +18,7 @@
         {{if .settings.Rules}}
     <div class="form-group">
     <label for="cases">On/Do cases:</label>
-    <table class="table table-hover" id="cases">
+    <table class="table table-hover">
         <thead>
             <tr>
                 <th width="20%">On</th>
@@ -28,7 +28,7 @@
                 <th width="5%"></th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="cases">
             {{range .settings.Rules }}
             <tr id="rule{{.ID}}">
                 <td>{{.On}}</td>
@@ -76,7 +76,7 @@
         {{if .settings.Schema}}
 
 <script>
-    function generate(id_, on_, do_, val_) {
+    function generateRule(id_, on_, do_, val_) {
     id_prop = "rule" + id_;
     return createElement(
         "tr",
@@ -109,6 +109,7 @@
         var DOF = $('#do-field');
         var VALF = $('#value-field');
         var addRuleButton = $('#adding-rule-submit');
+        var CASES = $('#cases');
 
         // add empty option
         newoption = document.createElement("option");
@@ -142,13 +143,15 @@
             }
         });
 
+        var ruleno = 0;
         addRuleButton.click(() => {
             [value_f, on_f, do_f] = [$('#value-field'), $('#on-field'), $('#do-field')];
             value = value_f.val();
             on_ = on_f.val();
             do_ = do_f.val();
             if (value && on_  && do_) {
-                
+                newRow = generateRule("test" + (++ruleno), on_, do_, value);
+                CASES.append(newRow);
             } else {
                 var errAlert = $('#json-error'); 
                 errAlert.show();
@@ -179,29 +182,33 @@
             return newEl;
         }
 
-        function generate(id_, on_, do_, val_) {
+        function generateRule(id_, on_, do_, val_) {
             id_prop = "rule" + id_;
             return createElement(
                 "tr",
                 { id: id_prop },
-                createElement("tr", null, "" + on_),
-                createElement("tr", null, "" + do_),
-                createElement("tr", { class: "settings-value" }, "" + val_),
-                createElement("tr", null, "" + id_),
+                createElement("td", null, "" + on_),
+                createElement("td", null, "" + do_),
+                createElement("td", { class: "settings-value" }, "" + val_),
+                createElement("td", null, "" + id_),
                 createElement(
-                "tr",
+                "td",
                 null,
                 createElement(
                     "button",
                     {
                     type: "button",
                     class: "btn btn-primary btn-danger btn-xs",
-                    onclick: "deleteRule('rule{{.ID}}')"
+                    onclick: `deleteRule('${id_prop}')`
                     },
                     createElement("span", { class: "glyphicon glyphicon-trash" })
                 )
                 )
             );
+        }
+
+        function deleteRule(id_) {
+            $(`#${id_}`).remove();
         }
 
     </script>
