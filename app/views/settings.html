@@ -151,7 +151,10 @@
             do_ = do_f.val();
             if (value && on_  && do_) {
                 newRow = generateRule("test" + (++ruleno), on_, do_, value);
+                lastChild = CASES.children('#adding-rule');
+                lastChild.detach();
                 CASES.append(newRow);
+                CASES.append(lastChild);
             } else {
                 var errAlert = $('#json-error'); 
                 errAlert.show();
