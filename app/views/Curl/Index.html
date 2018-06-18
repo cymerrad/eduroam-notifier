@@ -42,6 +42,8 @@
     SUBMIT_BUTTON.click(function(event){
         event.preventDefault();
         if ( validate( $('#json').val() ) ) {
+            var VISIBLE_VALUES = $('.settings-value'); // refind
+
             $.each(VISIBLE_VALUES, (ind, elem)=>{
                 newoption = document.createElement("input");
                 newoption.value = `${elem.innerText}`;
