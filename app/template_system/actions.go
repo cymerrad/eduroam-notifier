@@ -3,9 +3,9 @@ package template_system
 type Action string
 
 const (
-	OnAction Action = "action"
+	OnAction = "action"
 )
 
 const (
-	DoSendTemplate = "send_template"
+	DoActionSendTemplate = "send_template"
 )

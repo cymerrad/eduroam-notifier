@@ -2,6 +2,7 @@ package template_system
 
 type Field string
 type TemplateTag string
+type ConstValue string
 
 const (
 	OnTemplateTag = "template_tag"
