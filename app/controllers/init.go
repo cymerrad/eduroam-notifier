@@ -234,6 +234,10 @@ func initializeGlobalVariables() {
 			revel.AppLog.Errorf("Failed initialization: %s", err.Error())
 		}
 	}
+	var templates []models.NotifierTemplate
+	var rules []models.NotifierRule
+	var settings models.NotifierSettings
+
 	chillax(Dbm.Select(&templates, "SELECT * FROM NotifierTemplate;"))
 	chillax(Dbm.Select(&rules, "SELECT * FROM NotifierRule;"))
 	chillax(Dbm.Select(&settings, "SELECT * FROM NotifierSettings;"))

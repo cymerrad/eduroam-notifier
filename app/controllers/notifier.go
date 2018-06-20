@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"eduroam-notifier/app/automaton"
 	"eduroam-notifier/app/models"
+	"eduroam-notifier/app/template_system"
 	"net/http"
 	"time"
 
@@ -13,7 +13,7 @@ type Notifier struct {
 	App
 }
 
-var auto *automaton.A
+var auto *template_system.T
 
 func (c Notifier) Notify() revel.Result {
 	now := time.Now()
@@ -38,14 +38,19 @@ func (c Notifier) Notify() revel.Result {
 	for _, match := range parsedEvent.CheckResult.MatchingMessages {
 		msg := match.ToMessage(event.ID)
 
+		// store the match in database for further decisions
 		if err := c.Txn.Insert(&msg); err != nil {
 			c.Log.Errorf("Error inserting event into DB: %s", err.Error())
 			continue
 		}
 
+		// TODO
+		// at this point perform check if spamming the user is necessary
+		// because we still have access to database at this point
+
 		c.Log.Debugf("Success inserting message %v", msg)
 
-		interpretMessage(msg, auto)
+		interpretMessage(match.Fields, auto)
 
 	}
 
@@ -63,8 +68,8 @@ type ResponseAction struct {
 	Recipient, Body string
 }
 
-func interpretMessage(msg models.Message, a *automaton.A) ResponseAction {
-	revel.AppLog.Debugf("Doing something magical with %#v", msg)
+func interpretMessage(field models.EventMessageFields, a *template_system.T) ResponseAction {
+	revel.AppLog.Debugf("Doing something magical with %#v", field)
 
 	return ResponseAction{}
 }

@@ -23,7 +23,7 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) Console() revel.Result {
-	c.ViewArgs["settings"] = settings
+	// c.ViewArgs["settings"] = settings
 
 	return c.Render()
 }
