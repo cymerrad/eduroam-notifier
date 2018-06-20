@@ -1,6 +1,7 @@
 package template_system
 
 import (
+	"bytes"
 	"eduroam-notifier/app/models"
 	"encoding/json"
 	"strconv"
@@ -39,6 +40,11 @@ func New(settings models.NotifierSettings, rules []models.NotifierRule, template
 func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*template.Template, err error) {
 	for _, tm := range templates {
 		tmID := TemplateID(strconv.Itoa(tm.ID))
+
+		// well crap, I totally forgot about how powerfull Golang's templating is
+		tmBody := string(tm.Body)
+		tmBody := strings.Replace()
+
 		tmpl, err := template.New(string(tmID)).Parse(string(tm.Body))
 		if err != nil {
 			// we don't want non-parseable templates
@@ -101,6 +107,12 @@ func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	var fieldsMap map[string]string
 	btz, _ := json.Marshal(fieldsStruct)
 	json.Unmarshal(btz, &fieldsMap)
+
+	out := new(bytes.Buffer)
+
+	tmplID := t.actions[Action(fieldsStruct.Action)]
+	tmpl := t.templates[tmplID]
+	tmpl.Execute(out)
 
 	return "", nil
 }
