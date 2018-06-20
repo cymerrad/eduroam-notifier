@@ -23,6 +23,7 @@ func init() {
 	revel.OnAppStart(InitDb)
 	revel.OnAppStart(createTestUsers, 5)
 	revel.OnAppStart(createTestSettings, 6)
+	revel.OnAppStart(initializeGlobalVariables, 7)
 
 	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
@@ -246,7 +247,8 @@ func initializeGlobalVariables() {
 	var err error
 	globalTemplate, err = template_system.New(settings, rules, templates)
 	if err != nil {
-		revel.AppLog.Errorf("Failed initialization of templates: %s", err.Error())
+		revel.AppLog.Critf("Failed initialization of templates: %s", err.Error())
 	}
 
+	revel.AppLog.Infof("Templating system: \n %s", globalTemplate.Show())
 }

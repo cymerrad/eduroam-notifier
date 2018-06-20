@@ -48,7 +48,7 @@ func (c Notifier) Notify() revel.Result {
 
 		c.Log.Debugf("Success inserting message %v", msg)
 
-		interpretMessage(match.Fields, auto)
+		interpretMessage(match.Fields, globalTemplate)
 
 	}
 

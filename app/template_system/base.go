@@ -41,6 +41,8 @@ func New(settings models.NotifierSettings, rules []models.NotifierRule, template
 }
 
 func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*template.Template, err error) {
+	out = make(map[TemplateID]*template.Template)
+
 	for _, tm := range templates {
 		tmID := TemplateID(strconv.Itoa(tm.ID))
 
@@ -59,6 +61,10 @@ func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*te
 }
 
 func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF map[TemplateTag]Field, outC map[TemplateTag]ConstValue, err error) {
+	outA = make(map[Action]TemplateID)
+	outF = make(map[TemplateTag]Field)
+	outC = make(map[TemplateTag]ConstValue)
+
 	for _, rl := range rules {
 		values := Values{}
 		err := json.NewDecoder(strings.NewReader(rl.Value)).Decode(&values)
@@ -132,4 +138,9 @@ func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	tmpl.Execute(out, data)
 
 	return out.String(), nil
+}
+
+func (t *T) Show() string {
+	lol, _ := json.Marshal(t)
+	return string(lol)
 }
