@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"eduroam-notifier/app/template_system"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -241,4 +242,11 @@ func initializeGlobalVariables() {
 	chillax(Dbm.Select(&templates, "SELECT * FROM NotifierTemplate;"))
 	chillax(Dbm.Select(&rules, "SELECT * FROM NotifierRule;"))
 	chillax(Dbm.Select(&settings, "SELECT * FROM NotifierSettings;"))
+
+	var err error
+	globalTemplate, err = template_system.New(settings, rules, templates)
+	if err != nil {
+		revel.AppLog.Errorf("Failed initialization of templates: %s", err.Error())
+	}
+
 }
