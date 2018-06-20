@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"eduroam-notifier/app/models"
 	"encoding/json"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -18,6 +19,8 @@ type T struct {
 
 type TemplateID string
 type Values map[string]string
+
+var templateTags = regexp.MustCompile(`\{\{\s*(\w+)\s*\}\}`)
 
 func New(settings models.NotifierSettings, rules []models.NotifierRule, templates []models.NotifierTemplate) (*T, error) {
 	t := &T{}
@@ -43,9 +46,9 @@ func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*te
 
 		// well crap, I totally forgot about how powerfull Golang's templating is
 		tmBody := string(tm.Body)
-		tmBody := strings.Replace()
+		tmBodyDotted := templateTags.ReplaceAllString(tmBody, "{{.$1}}")
 
-		tmpl, err := template.New(string(tmID)).Parse(string(tm.Body))
+		tmpl, err := template.New(string(tmID)).Parse(tmBodyDotted)
 		if err != nil {
 			// we don't want non-parseable templates
 			return out, err
@@ -108,11 +111,25 @@ func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	btz, _ := json.Marshal(fieldsStruct)
 	json.Unmarshal(btz, &fieldsMap)
 
+	data := make(map[string]string)
+	// gather data from fieldsStruct
+	for key, value := range t.replaceWithField {
+		data[string(key)] = string(fieldsMap[string(value)])
+	}
+	// throw in the rest
+	for key, value := range t.replaceWithConst {
+		data[string(key)] = string(value)
+	}
+
+	// this will be the output
 	out := new(bytes.Buffer)
 
+	// get the template we need
 	tmplID := t.actions[Action(fieldsStruct.Action)]
 	tmpl := t.templates[tmplID]
-	tmpl.Execute(out)
 
-	return "", nil
+	// execute template
+	tmpl.Execute(out, data)
+
+	return out.String(), nil
 }
