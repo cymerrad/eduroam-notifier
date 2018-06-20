@@ -68,13 +68,16 @@ func (c Curl) Notify() revel.Result {
 		return c.Redirect(Curl.Index)
 	}
 
+	event := models.EventParsed{}
+	_ = json.NewDecoder(strings.NewReader(rawJSON)).Decode(&event)
+
 	c.Log.Infof("Form: %#v", c.Params.Form)
 
 	prettiedUp, _ := json.MarshalIndent(input, "", "  ")
 
 	c.ViewArgs["curl"] = CurlData{
 		Input:  string(prettiedUp),
-		Output: c.dryRun(rawJSON),
+		Output: c.dryRun(event),
 	}
 
 	settings, err := retrieveSettings(c.Txn)
@@ -125,8 +128,17 @@ func retrieveSettings(txn *gorp.Transaction) (s SettingsData, err error) {
 	}, nil
 }
 
-func (c Curl) dryRun(rawJSON string) string {
-	return witness
+func (c Curl) dryRun(event models.EventParsed) string {
+	out := ""
+
+	for _, match := range event.CheckResult.MatchingMessages {
+		output, _ := globalTemplate.Input(match.Fields)
+		out += output + "\n"
+	}
+
+	out += witness + "\n"
+
+	return out
 }
 
 const witness = `__        ___ _                       _ 

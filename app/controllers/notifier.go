@@ -13,8 +13,6 @@ type Notifier struct {
 	App
 }
 
-var auto *template_system.T
-
 func (c Notifier) Notify() revel.Result {
 	now := time.Now()
 
