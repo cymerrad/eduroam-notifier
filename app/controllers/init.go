@@ -193,6 +193,11 @@ Z poważaniem,
 			Do:    "substitute_with_field",
 			Value: "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
 		},
+		{
+			On:    "action",
+			Do:    "send_template",
+			Value: "{\"action\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"send_template\" : \"1\"}",
+		},
 	}
 
 	// insert if not existent... or not... it depends
