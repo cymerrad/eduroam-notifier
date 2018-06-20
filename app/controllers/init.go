@@ -250,5 +250,5 @@ func initializeGlobalVariables() {
 		revel.AppLog.Critf("Failed initialization of templates: %s", err.Error())
 	}
 
-	revel.AppLog.Infof("Templating system: \n %s", globalTemplate.Show())
+	revel.AppLog.Debugf("Templating system: \n %s", globalTemplate.Show())
 }

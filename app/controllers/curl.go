@@ -129,16 +129,20 @@ func retrieveSettings(txn *gorp.Transaction) (s SettingsData, err error) {
 }
 
 func (c Curl) dryRun(event models.EventParsed) string {
-	out := ""
+	out := strings.Builder{}
 
 	for _, match := range event.CheckResult.MatchingMessages {
-		output, _ := globalTemplate.Input(match.Fields)
-		out += output + "\n"
+		output, err := globalTemplate.Input(match.Fields)
+		if err != nil {
+			out.WriteString(err.Error() + "\n")
+			continue
+		}
+		out.WriteString(output + "\n")
 	}
 
-	out += witness + "\n"
+	out.WriteString(witness + "\n")
 
-	return out
+	return out.String()
 }
 
 const witness = `__        ___ _                       _ 
