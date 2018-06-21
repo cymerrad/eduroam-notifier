@@ -117,12 +117,15 @@ func (c Curl) Notify() revel.Result {
 		}
 	}
 
+	schemaParsed, _ := json.Marshal(template_system.Schema)
+
 	settings := SettingsData{
 		OtherParsed:  other,
 		Other:        otherRaw,
 		Rules:        rules,
 		TemplatesRaw: templatesRaw,
 		Templates:    templatesPrettied,
+		Schema:       string(schemaParsed),
 	}
 
 	templates, err := template_system.New(settings.OtherParsed, settings.Rules, settings.TemplatesRaw)
