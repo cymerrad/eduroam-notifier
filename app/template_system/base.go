@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+
+	"github.com/revel/revel"
 )
 
 type T struct {
@@ -167,7 +169,10 @@ func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 
 	var fieldsMap map[string]string
 	btz, _ := json.Marshal(fieldsStruct)
-	json.Unmarshal(btz, &fieldsMap)
+	err := json.Unmarshal(btz, &fieldsMap)
+	if err != nil {
+		revel.AppLog.Errorf("fieldsStruct -> fieldsMap error: %s", err.Error())
+	}
 
 	data := make(map[string]string)
 	// gather data from fieldsStruct
@@ -178,6 +183,9 @@ func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	for key, value := range t.ReplaceWithConst {
 		data[string(key)] = string(value)
 	}
+	revel.AppLog.Debugf("fieldsMap %#v", fieldsMap)
+	revel.AppLog.Debugf("fieldsStruct %#v", fieldsStruct)
+	revel.AppLog.Debugf("Data for template: %#v", data)
 
 	// this will be the output
 	out := new(bytes.Buffer)

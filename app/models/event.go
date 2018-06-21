@@ -85,10 +85,13 @@ type EventMatchingMessage struct {
 	StreamIds []string           `json:"stream_ids"`
 }
 
+// TODO
+// this probably should be map[string]string or map[string]interface{}
+// I need to marshall this and unmarshall it back a few times for using it in the template
 type EventMessageFields struct {
-	Level          int    `json:"level"`
+	Level          int    `json:"-"` // in fact it is a "level"
 	Gl2RemoteIP    string `json:"gl2_remote_ip"`
-	Gl2RemotePort  int    `json:"gl2_remote_port"`
+	Gl2RemotePort  int    `json:"-"` // and this is "gl2_remote_port", but don't tell anyone that I ignored these fields
 	SourceUser     string `json:"source-user"`
 	Gl2SourceInput string `json:"gl2_source_input"`
 	EDUROAMACT     string `json:"EDUROAM_ACT"`
