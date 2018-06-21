@@ -202,20 +202,17 @@ func (c Curl) dryRun(event models.EventParsed, template *template_system.T) stri
 	out := strings.Builder{}
 
 	for _, match := range event.CheckResult.MatchingMessages {
-		output, err := template.Input(match.Fields)
-		if err != nil {
-			out.WriteString(err.Error() + "\n")
-			continue
-		}
-		out.WriteString(output + "\n")
+		result := interpretMessage(match.Fields, template)
+		btz, _ := json.MarshalIndent(result, "", "  ")
+		out.WriteString(string(btz) + "\n")
 	}
 
-	out.WriteString(witness + "\n")
+	out.WriteString(witnessMeBloodBag + "\n")
 
 	return out.String()
 }
 
-const witness = `__        ___ _                       _ 
+const witnessMeBloodBag = `__        ___ _                       _ 
 \ \      / (_) |_ _ __   ___  ___ ___| |
  \ \ /\ / /| | __| '_ \ / _ \/ __/ __| |
   \ V  V / | | |_| | | |  __/\__ \__ \_|

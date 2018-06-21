@@ -3,6 +3,7 @@ package controllers
 import (
 	"eduroam-notifier/app/models"
 	"eduroam-notifier/app/template_system"
+	"errors"
 	"net/http"
 	"time"
 
@@ -63,11 +64,36 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 
 // send mail
 type ResponseAction struct {
-	Recipient, Body string
+	Recipient string `json:"recipient"`
+	Body      string `json:"body"`
+	Error     string `json:"error,omitempty"`
 }
 
-func interpretMessage(field models.EventMessageFields, a *template_system.T) ResponseAction {
-	revel.AppLog.Debugf("Doing something magical with %#v", field)
+func interpretMessage(fields models.EventMessageFields, a *template_system.T) (resp ResponseAction) {
+	revel.AppLog.Debugf("Doing something magical with %#v", fields)
 
-	return ResponseAction{}
+	output, err := a.Input(fields)
+	if err != nil {
+		resp.Error = err.Error()
+		resp.Recipient = "none (do nothing)"
+		return
+	}
+	resp.Body = output
+
+	recipient, err := determineRecipient(fields)
+	if err != nil {
+		resp.Error = err.Error()
+		resp.Recipient = "(cannot be found)"
+	}
+	resp.Recipient = recipient
+
+	return
+}
+
+// this might seriously change (e.g. calls to some other service)
+func determineRecipient(fields models.EventMessageFields) (string, error) {
+	if fields.SourceUser == "" {
+		return "", errors.New("empty SourceUser field")
+	}
+	return fields.SourceUser, nil
 }
