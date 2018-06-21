@@ -5,6 +5,7 @@ import (
 	"eduroam-notifier/app/template_system"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/go-gorp/gorp"
@@ -79,9 +80,47 @@ func (c Curl) Notify() revel.Result {
 
 	// creating temporary settings for testing purposes
 	// settings, err := retrieveSettings(c.Txn)
-	settings := SettingsData{}
-	other := c.Params.Get("other")
-	c.Params.Values
+	otherRaw := c.Params.Get("other")
+	other := models.NotifierSettingsParsed{}
+	err = json.NewDecoder(strings.NewReader(otherRaw)).Decode(&other)
+	if err != nil {
+		// TODO
+		// error validating
+	}
+
+	cases := c.Params.Values["settings-cases"]
+	rules, err := template_system.ParseRulesFromValues(cases)
+	if err != nil {
+		// TODO
+		// error validating
+	}
+	templatesRaw := []models.NotifierTemplate{}
+	key := templateKey{1}
+	for {
+		if val := c.Params.Get(key.Get()); val != "" {
+			templatesRaw = append(templatesRaw, models.NotifierTemplate{
+				Body: []byte(val),
+				ID:   key.ID(),
+			})
+			key.Next()
+		} else {
+			break
+		}
+	}
+	templatesPrettied := make([]BodyParsed, len(templatesRaw))
+	for _, tmpl := range templatesRaw {
+		templatesPrettied = append(templatesPrettied, BodyParsed{
+			ID:   tmpl.ID,
+			Body: string(tmpl.Body),
+		})
+	}
+
+	settings := SettingsData{
+		Other:        other,
+		Rules:        rules,
+		TemplatesRaw: templatesRaw,
+		Templates:    templatesPrettied,
+	}
 
 	templates, err := template_system.New(settings.Other, settings.Rules, settings.TemplatesRaw)
 	if err != nil {
@@ -160,3 +199,17 @@ const witness = `__        ___ _                       _
   \ V  V / | | |_| | | |  __/\__ \__ \_|
    \_/\_/  |_|\__|_| |_|\___||___/___(_)
                                         `
+
+type templateKey struct {
+	id int
+}
+
+func (tk *templateKey) Next() {
+	tk.id++
+}
+func (tk *templateKey) Get() string {
+	return fmt.Sprintf("template%d", tk.id)
+}
+func (tk *templateKey) ID() int {
+	return tk.id
+}
