@@ -25,8 +25,10 @@ type SettingsData struct {
 	Templates    []BodyParsed
 	TemplatesRaw []models.NotifierTemplate
 	Rules        []models.NotifierRule
-	Other        models.NotifierSettingsParsed
-	Schema       string
+	OtherParsed  models.NotifierSettingsParsed
+	Other        string
+
+	Schema string
 }
 
 type BodyParsed struct {
@@ -116,13 +118,14 @@ func (c Curl) Notify() revel.Result {
 	}
 
 	settings := SettingsData{
-		Other:        other,
+		OtherParsed:  other,
+		Other:        otherRaw,
 		Rules:        rules,
 		TemplatesRaw: templatesRaw,
 		Templates:    templatesPrettied,
 	}
 
-	templates, err := template_system.New(settings.Other, settings.Rules, settings.TemplatesRaw)
+	templates, err := template_system.New(settings.OtherParsed, settings.Rules, settings.TemplatesRaw)
 	if err != nil {
 		c.Validation.Error("Error occurred: %s", err.Error())
 	}
@@ -169,10 +172,12 @@ func retrieveSettings(txn *gorp.Transaction) (s SettingsData, err error) {
 	settingsParsed, _ := settings.Unmarshall()
 
 	return SettingsData{
-		Templates: templatesParsed,
-		Rules:     rules,
-		Other:     settingsParsed,
-		Schema:    string(schemaParsed),
+		Templates:    templatesParsed,
+		Rules:        rules,
+		OtherParsed:  settingsParsed,
+		Schema:       string(schemaParsed),
+		Other:        string(settings.JSON),
+		TemplatesRaw: templatesRaw,
 	}, nil
 }
 
