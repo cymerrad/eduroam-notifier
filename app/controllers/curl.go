@@ -144,6 +144,8 @@ func (c Curl) Notify() revel.Result {
 
 	c.ViewArgs["settings"] = settings
 
+	// TODO frontend bugs
+
 	return c.RenderTemplate("Curl/Index.html")
 }
 
