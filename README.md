@@ -1,7 +1,9 @@
 # Eduroam notifier
 
 ## TODO
-1. Settings view
+1. ~~Settings view~~
+1. Save temporary settings
+1. Template global constants
 
 ## Założenia
 
