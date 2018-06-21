@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"eduroam-notifier/app/models"
+	"eduroam-notifier/app/template_system"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -118,7 +119,7 @@ func retrieveSettings(txn *gorp.Transaction) (s SettingsData, err error) {
 		templatesParsed[ind] = BodyParsed{raw.ID, string(raw.Body)}
 	}
 
-	schemaParsed, _ := json.Marshal(schema)
+	schemaParsed, _ := json.Marshal(template_system.Schema)
 
 	return SettingsData{
 		Templates: templatesParsed,
@@ -151,8 +152,3 @@ const witness = `__        ___ _                       _
   \ V  V / | | |_| | | |  __/\__ \__ \_|
    \_/\_/  |_|\__|_| |_|\___||___/___(_)
                                         `
-
-var schema map[string][]string = map[string][]string{
-	"action":       {"send_template"},
-	"template_tag": {"substitute_with_field", "insert_text"},
-}
