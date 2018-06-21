@@ -80,6 +80,8 @@ func (c Curl) Notify() revel.Result {
 	// creating temporary settings for testing purposes
 	// settings, err := retrieveSettings(c.Txn)
 	settings := SettingsData{}
+	other := c.Params.Get("other")
+	c.Params.Values
 
 	templates, err := template_system.New(settings.Other, settings.Rules, settings.TemplatesRaw)
 	if err != nil {

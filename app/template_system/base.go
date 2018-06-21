@@ -113,6 +113,47 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 	return
 }
 
+// Misleading af, lol
+func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
+	out := make([]models.NotifierRule, len(rules))
+	for _, rl := range rules {
+		values := Values{}
+		err := json.NewDecoder(strings.NewReader(rl)).Decode(&values)
+		if err != nil {
+			// error parsing
+			continue
+		}
+
+		rule := &models.NotifierRule{}
+		// first
+		for key := range Schema {
+			if _, ok := values[key]; ok {
+				rule.On = key
+				break
+			}
+		}
+		if rule.On == "" {
+			// error parsing
+			continue
+		}
+
+		// second
+		for _, key := range Schema[rule.On] {
+			if _, ok := values[key]; ok {
+				rule.Do = key
+				break
+			}
+		}
+		if rule.Do == "" {
+			// error parsing
+			continue
+		}
+
+		out = append(out, *rule)
+	}
+	return out, nil
+}
+
 func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	// get the template we need
 	tmplID := t.Actions[Action(fieldsStruct.Action)]
