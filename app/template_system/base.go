@@ -149,6 +149,8 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 			continue
 		}
 
+		rule.Value = rl
+
 		out = append(out, *rule)
 	}
 	return out, nil
