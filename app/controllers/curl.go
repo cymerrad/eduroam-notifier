@@ -76,7 +76,7 @@ func (c Curl) Notify() revel.Result {
 	event := models.EventParsed{}
 	_ = json.NewDecoder(strings.NewReader(rawJSON)).Decode(&event)
 
-	c.Log.Infof("Form: %#v", c.Params.Form)
+	c.Log.Debugf("Form: %#v", c.Params.Form)
 
 	prettiedUpInput, _ := json.MarshalIndent(input, "", "  ")
 
@@ -110,11 +110,11 @@ func (c Curl) Notify() revel.Result {
 		}
 	}
 	templatesPrettied := make([]BodyParsed, len(templatesRaw))
-	for _, tmpl := range templatesRaw {
-		templatesPrettied = append(templatesPrettied, BodyParsed{
+	for ind, tmpl := range templatesRaw {
+		templatesPrettied[ind] = BodyParsed{
 			ID:   tmpl.ID,
 			Body: string(tmpl.Body),
-		})
+		}
 	}
 
 	settings := SettingsData{
@@ -145,6 +145,7 @@ func (c Curl) Notify() revel.Result {
 	c.ViewArgs["settings"] = settings
 
 	// TODO frontend bugs
+	c.Log.Debugf("Settings: %#v", settings)
 
 	return c.RenderTemplate("Curl/Index.html")
 }

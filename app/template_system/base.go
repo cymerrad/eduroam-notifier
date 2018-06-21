@@ -116,7 +116,7 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 // Misleading af, lol
 func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 	out := make([]models.NotifierRule, len(rules))
-	for _, rl := range rules {
+	for ind, rl := range rules {
 		values := Values{}
 		err := json.NewDecoder(strings.NewReader(rl)).Decode(&values)
 		if err != nil {
@@ -150,8 +150,9 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 		}
 
 		rule.Value = rl
+		rule.ID = ind
 
-		out = append(out, *rule)
+		out[ind] = *rule
 	}
 	return out, nil
 }
