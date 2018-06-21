@@ -244,12 +244,15 @@ func initializeGlobalVariables() {
 	var templates []models.NotifierTemplate
 	var rules []models.NotifierRule
 	var settings models.NotifierSettings
+	var err error
 
 	chillax(Dbm.Select(&templates, "SELECT * FROM NotifierTemplate;"))
 	chillax(Dbm.Select(&rules, "SELECT * FROM NotifierRule;"))
-	chillax(Dbm.Select(&settings, "SELECT * FROM NotifierSettings;"))
+	err = Dbm.SelectOne(&settings, "SELECT * FROM NotifierSettings ORDER BY -ID LIMIT 1;")
+	if err != nil {
+		revel.AppLog.Errorf("Failed initialization: %s", err.Error())
+	}
 
-	var err error
 	settingsParsed, err := settings.Unmarshall()
 	if err != nil {
 		revel.AppLog.Critf("Failed settings unmarshalling: %s", err.Error())
