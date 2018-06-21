@@ -23,7 +23,7 @@ type Values map[string]string
 
 var templateTags = regexp.MustCompile(`\{\{\s*(\w+)\s*\}\}`)
 
-func New(settings models.NotifierSettings, rules []models.NotifierRule, templates []models.NotifierTemplate) (*T, error) {
+func New(other models.NotifierSettingsParsed, rules []models.NotifierRule, templates []models.NotifierTemplate) (*T, error) {
 	ts, err := ParseTemplates(templates)
 	if err != nil {
 		return nil, err

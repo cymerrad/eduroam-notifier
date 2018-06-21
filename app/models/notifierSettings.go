@@ -1,8 +1,18 @@
 package models
 
+import (
+	"encoding/json"
+)
+
 type NotifierSettings struct {
 	ID   int
 	JSON []byte
+}
+
+func (ns NotifierSettings) Unmarshall() (NotifierSettingsParsed, error) {
+	settingsParsed := NotifierSettingsParsed{}
+	err := json.Unmarshal(ns.JSON, &settingsParsed)
+	return settingsParsed, err
 }
 
 type NotifierSettingsParsed struct {

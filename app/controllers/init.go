@@ -250,7 +250,12 @@ func initializeGlobalVariables() {
 	chillax(Dbm.Select(&settings, "SELECT * FROM NotifierSettings;"))
 
 	var err error
-	globalTemplate, err = template_system.New(settings, rules, templates)
+	settingsParsed, err := settings.Unmarshall()
+	if err != nil {
+		revel.AppLog.Critf("Failed settings unmarshalling: %s", err.Error())
+	}
+
+	globalTemplate, err = template_system.New(settingsParsed, rules, templates)
 	if err != nil {
 		revel.AppLog.Critf("Failed initialization of templates: %s", err.Error())
 	}

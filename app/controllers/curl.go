@@ -21,10 +21,11 @@ type CurlData struct {
 }
 
 type SettingsData struct {
-	Templates []BodyParsed
-	Rules     []models.NotifierRule
-	Settings  string
-	Schema    string
+	Templates    []BodyParsed
+	TemplatesRaw []models.NotifierTemplate
+	Rules        []models.NotifierRule
+	Other        models.NotifierSettingsParsed
+	Schema       string
 }
 
 type BodyParsed struct {
@@ -74,16 +75,20 @@ func (c Curl) Notify() revel.Result {
 
 	c.Log.Infof("Form: %#v", c.Params.Form)
 
-	prettiedUp, _ := json.MarshalIndent(input, "", "  ")
+	prettiedUpInput, _ := json.MarshalIndent(input, "", "  ")
 
-	c.ViewArgs["curl"] = CurlData{
-		Input:  string(prettiedUp),
-		Output: c.dryRun(event),
-	}
+	// creating temporary settings for testing purposes
+	// settings, err := retrieveSettings(c.Txn)
+	settings := SettingsData{}
 
-	settings, err := retrieveSettings(c.Txn)
+	templates, err := template_system.New(settings.Other, settings.Rules, settings.TemplatesRaw)
 	if err != nil {
 		c.Validation.Error("Error occurred: %s", err.Error())
+	}
+
+	c.ViewArgs["curl"] = CurlData{
+		Input:  string(prettiedUpInput),
+		Output: c.dryRun(event, templates),
 	}
 
 	if c.Validation.HasErrors() {
@@ -120,20 +125,21 @@ func retrieveSettings(txn *gorp.Transaction) (s SettingsData, err error) {
 	}
 
 	schemaParsed, _ := json.Marshal(template_system.Schema)
+	settingsParsed, _ := settings.Unmarshall()
 
 	return SettingsData{
 		Templates: templatesParsed,
 		Rules:     rules,
-		Settings:  string(settings.JSON),
+		Other:     settingsParsed,
 		Schema:    string(schemaParsed),
 	}, nil
 }
 
-func (c Curl) dryRun(event models.EventParsed) string {
+func (c Curl) dryRun(event models.EventParsed, template *template_system.T) string {
 	out := strings.Builder{}
 
 	for _, match := range event.CheckResult.MatchingMessages {
-		output, err := globalTemplate.Input(match.Fields)
+		output, err := template.Input(match.Fields)
 		if err != nil {
 			out.WriteString(err.Error() + "\n")
 			continue
