@@ -14,7 +14,7 @@
     </div>
     <h2>Send a JSON like a Graylog would:</h2>
     <div class="form-group">
-        <label for="json">JSON Object:</label>
+        <label for="json">JSON Object</label>
         <textarea name="json" class="form-control" rows="10" id="json"></textarea>
     </div> 
 </div>
@@ -27,6 +27,11 @@
 <div class="container">
     <h2>The example event will have the following effect:</h2>
     {{if .curl}}
+    <label for="parsed-output">Expected results</label>
+    <ul class="list-group" id="parsed-output">
+    </ul>
+
+    <label for="json-output">Raw JSON output</label>
     <pre id="json-output"></pre>
     {{else}}
     <p>Send a request first!</p>
@@ -90,6 +95,28 @@
 {{if .curl.Output}}
 <script>
     $('#json-output').text("{{.curl.Output}}");
+    var OUTPUT = JSON.parse("{{.curl.Output}}")
+    var PARSED_OUTS = $('#parsed-output')
+    // TODO
+
+    OUTPUT.forEach(element => {
+        PARSED_OUTS.append(generateOutputMessage(element.recipient, element.body));
+    });
+
+    function generateOutputMessage(recipient, body) {
+        return createElement(
+            "li",
+            { class: "list-group-item" },
+            createElement("div", { class: "form-group" }, 
+                createElement("label", null, "Recipient"),
+                createElement("p", null, recipient),
+            ),
+            createElement("div", { class: "form-group" }, 
+                createElement("label", null, "Body"),
+                createElement("pre", null, body),
+            ),
+        );
+    }
 </script>
 {{end}}
 

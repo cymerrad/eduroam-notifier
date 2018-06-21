@@ -199,17 +199,21 @@ func (c App) retrieveSettingsFromSession() (s SettingsData, err error) {
 }
 
 func (c Curl) dryRun(event models.EventParsed, template *template_system.T) string {
-	out := strings.Builder{}
+	out := make([]ResponseAction, 0)
 
 	for _, match := range event.CheckResult.MatchingMessages {
 		result := interpretMessage(match.Fields, template)
-		btz, _ := json.MarshalIndent(result, "", "  ")
-		out.WriteString(string(btz) + "\n")
+		out = append(out, result)
 	}
 
-	out.WriteString(witnessMeBloodBag + "\n")
+	out = append(out, ResponseAction{
+		Recipient: "Blood-bag",
+		Body:      witnessMeBloodBag,
+	})
 
-	return out.String()
+	btz, _ := json.MarshalIndent(out, "", "  ")
+
+	return string(btz)
 }
 
 const witnessMeBloodBag = `__        ___ _                       _ 
