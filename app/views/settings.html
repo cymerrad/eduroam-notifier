@@ -10,7 +10,7 @@
         <li class="list-group-item"  id="template{{.ID}}">
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between;">
-                        <label for="templateText{{.ID}}">{{.ID}}</label>
+                        <label for="templateText{{.ID}}" class="template-id">{{.ID}}</label>
                         <button type="button" class="btn btn-xs btn-danger" onclick="deleteTemplate('{{.ID}}')"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
                 <textarea name="template{{.ID}}" class="form-control" rows="10" id="templateText{{.ID}}"></textarea>
@@ -217,14 +217,27 @@
             $(`#${id_}`).remove();
         }
 
-        var templatesNumber = TEMPLATES.children.length;
+        function getNextTemplateNumber() {
+            var WAT = $('.template-id');
+            taken = WAT.toArray().map((val) => Number(val.innerText));
+            taken.sort((a,b) => a>b)
+
+            possible = 1;
+            for (i=0; i<taken.length; i++) {
+                if (taken[i] != possible) {
+                    return possible;
+                }
+                possible ++;
+            }
+            return possible;
+        }
+
         newTemplateButton.click(() => {
-            newTemplate = generateTemplate(templatesNumber);
+            newTemplate = generateTemplate(getNextTemplateNumber());
             lastChild = TEMPLATES.children('#templates-new-button');
             lastChild.detach();
             TEMPLATES.append(newTemplate);
             TEMPLATES.append(lastChild);
-            templatesNumber ++;
         });
 
         function generateTemplate(id_) {
@@ -244,6 +257,7 @@
                 }, 
                     createElement("label", {
                         for: id_prop_textarea,
+                        class: "template-id",
                     }, `${id_}`),
                     createElement(
                     "button",
@@ -267,7 +281,6 @@
 
         function deleteTemplate(id_) {
             $(`#template${id_}`).remove();
-            templatesNumber --;
         }
 
     </script>
