@@ -7,14 +7,17 @@
     
         {{if .settings.Templates}}
             {{range .settings.Templates}}
-        <li class="list-group-item">
+        <li class="list-group-item"  id="template{{.ID}}">
             <div class="form-group">
-                <label for="template{{.ID}}">{{.ID}}</label>
-                <textarea name="template{{.ID}}" class="form-control" rows="10" id="template{{.ID}}"></textarea>
+                <div style="display: flex; justify-content: space-between;">
+                        <label for="templateText{{.ID}}">{{.ID}}</label>
+                        <button type="button" class="btn btn-xs btn-danger" onclick="deleteTemplate('{{.ID}}')"><span class="glyphicon glyphicon-trash"></span></button>
+                </div>
+                <textarea name="template{{.ID}}" class="form-control" rows="10" id="templateText{{.ID}}"></textarea>
             </div> 
 
             <script>
-                $('#template{{.ID}}').val("{{.Body}}");
+                $('#templateText{{.ID}}').val("{{.Body}}");
             </script>  
         </li>
             {{end}}
@@ -195,6 +198,9 @@
                 if (props.hasOwnProperty("onclick")) {
                     newEl.setAttribute('onclick', props.onclick)
                 }
+                if (props.hasOwnProperty("style")) {
+                    newEl.setAttribute('style', props.style)
+                }
             }
             for (i=0; i<children.length; i++) {
                 newEl.append(children[i]);
@@ -229,6 +235,7 @@
 
         function deleteRule(id_) {
             $(`#${id_}`).remove();
+            templatesNumber --;
         }
 
         var templatesNumber = TEMPLATES.children.length;
@@ -242,25 +249,45 @@
         });
 
         function generateTemplate(id_) {
-            id_prop = `template${id_}`
-
+            id_prop = `template${id_}`;
+            id_prop_textarea = `templateText${id_}`;
             return createElement(
                 "li",
-                { class: "list-group-item" },
+                { 
+                    class: "list-group-item",
+                     id: id_prop,
+                },
                 createElement(
                 "div",
                 { class: "form-group" },
-                createElement("label", {
-                    for: id_prop,
-                }, `${id_}`),
+                createElement("div", {
+                    style: "display: flex; justify-content: space-between;",
+                }, 
+                    createElement("label", {
+                        for: id_prop_textarea,
+                    }, `${id_}`),
+                    createElement(
+                    "button",
+                    {
+                    type: "button",
+                    class: "btn btn-primary btn-danger btn-xs",
+                    onclick: `deleteTemplate('${id_}')`
+                    },
+                    createElement("span", { class: "glyphicon glyphicon-trash" })
+                    )
+                ),
                 createElement("textarea", {
-                    name: id_prop,
+                    name: id_prop_textarea,
                     class: "form-control",
                     rows: "10",
-                    id: id_prop,
+                    id: id_prop_textarea,
                 })
                 )
             );
+        }
+
+        function deleteTemplate(id_) {
+            $(`#template${id_}`).remove();
         }
 
     </script>
