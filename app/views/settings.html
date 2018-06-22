@@ -178,6 +178,9 @@
                 if (props.hasOwnProperty("name")) {
                     newEl.setAttribute('name', props.name)
                 }
+                if (props.hasOwnProperty("rows")) {
+                    newEl.setAttribute('rows', props.rows)
+                }
             }
             for (i=0; i<children.length; i++) {
                 newEl.append(children[i]);
