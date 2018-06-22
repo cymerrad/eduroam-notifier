@@ -2,18 +2,29 @@
     {{if .settings}}
 
     <h2>Settings:</h2>
+    <label for="templates">Templates</label>
+    <ul class="list-group" id="templates">
+    
         {{if .settings.Templates}}
             {{range .settings.Templates}}
-    <div class="form-group">
-        <label for="template{{.ID}}">Template message <b>ID:{{.ID}}</b></label>
-        <textarea name="template{{.ID}}" class="form-control" rows="10" id="template{{.ID}}"></textarea>
-    </div> 
+        <li class="list-group-item">
+            <div class="form-group">
+                <label for="template{{.ID}}">{{.ID}}</label>
+                <textarea name="template{{.ID}}" class="form-control" rows="10" id="template{{.ID}}"></textarea>
+            </div> 
 
-    <script>
-        $('#template{{.ID}}').val("{{.Body}}");
-    </script>  
+            <script>
+                $('#template{{.ID}}').val("{{.Body}}");
+            </script>  
+        </li>
             {{end}}
         {{end}}
+        <li class="list-group-item" id="templates-new-button">
+            <div style="display: flex; flex-direction: row-reverse;">
+                <button type="button" class="btn btn-lg btn-success" id="new-template-button">New template</button>
+            </div>
+        </li>
+    </ul>
 
         {{if .settings.Rules}}
     <div class="form-group">
@@ -53,7 +64,7 @@
                     <textarea class="form-control" rows="2" style="resize: vertical; min-height: 33px;" id="value-field"></textarea>
                 </td>
                 <td>
-                    <button type="button" class="btn btn-primary btn-success btn-xs" id="adding-rule-submit">
+                    <button type="button" class="btn btn-primary btn-success btn-md" id="adding-rule-submit">
                         <span class="glyphicon glyphicon-plus"></span>
                     </button>
                 </td>
@@ -110,6 +121,8 @@
         var VALF = $('#value-field');
         var addRuleButton = $('#adding-rule-submit');
         var CASES = $('#cases');
+        var TEMPLATES = $('#templates')
+        var newTemplateButton = $('#new-template-button');
 
         // add empty option
         newoption = document.createElement("option");
@@ -216,6 +229,38 @@
 
         function deleteRule(id_) {
             $(`#${id_}`).remove();
+        }
+
+        var templatesNumber = TEMPLATES.children.length;
+        newTemplateButton.click(() => {
+            newTemplate = generateTemplate(templatesNumber);
+            lastChild = TEMPLATES.children('#templates-new-button');
+            lastChild.detach();
+            TEMPLATES.append(newTemplate);
+            TEMPLATES.append(lastChild);
+            templatesNumber ++;
+        });
+
+        function generateTemplate(id_) {
+            id_prop = `template${id_}`
+
+            return createElement(
+                "li",
+                { class: "list-group-item" },
+                createElement(
+                "div",
+                { class: "form-group" },
+                createElement("label", {
+                    for: id_prop,
+                }, `${id_}`),
+                createElement("textarea", {
+                    name: id_prop,
+                    class: "form-control",
+                    rows: "10",
+                    id: id_prop,
+                })
+                )
+            );
         }
 
     </script>
