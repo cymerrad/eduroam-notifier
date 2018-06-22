@@ -29,6 +29,8 @@
         </li>
     </ul>
 
+    <div class="hidden" id="settings-templates"></div>
+
         {{if .settings.Rules}}
     <div class="form-group">
     <label for="cases">On/Do cases:</label>
@@ -88,34 +90,6 @@
     <div class="hidden" id="settings-cases"></div>
 
         {{if .settings.Schema}}
-
-<script>
-    function generateRule(id_, on_, do_, val_) {
-    id_prop = "rule" + id_;
-    return createElement(
-        "tr",
-        { id: id_prop },
-        createElement("tr", null, "" + on_),
-        createElement("tr", null, "" + do_),
-        createElement("tr", { class: "settings-value" }, "" + val_),
-        createElement("tr", null, "" + id_),
-        createElement(
-        "tr",
-        null,
-        createElement(
-            "button",
-            {
-            type: "button",
-            class: "btn btn-primary btn-danger btn-xs",
-            onclick: "deleteRule('rule{{.ID}}')"
-            },
-            createElement("span", { class: "glyphicon glyphicon-trash" })
-        )
-        )
-    );
-    }
-</script>
-
 
     <script>
         var SCHEMA = JSON.parse("{{.settings.Schema}}");
@@ -201,6 +175,9 @@
                 if (props.hasOwnProperty("style")) {
                     newEl.setAttribute('style', props.style)
                 }
+                if (props.hasOwnProperty("name")) {
+                    newEl.setAttribute('name', props.name)
+                }
             }
             for (i=0; i<children.length; i++) {
                 newEl.append(children[i]);
@@ -276,7 +253,7 @@
                     )
                 ),
                 createElement("textarea", {
-                    name: id_prop_textarea,
+                    name: id_prop,
                     class: "form-control",
                     rows: "10",
                     id: id_prop_textarea,
