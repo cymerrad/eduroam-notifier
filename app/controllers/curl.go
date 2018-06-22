@@ -5,7 +5,9 @@ import (
 	"eduroam-notifier/app/template_system"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/revel/revel"
@@ -164,16 +166,14 @@ func (c App) retrieveSettingsFromSession() (s SettingsData, err error) {
 		return s, err
 	}
 	templatesRaw := []models.NotifierTemplate{}
-	key := templateKey{1}
-	for {
-		if val := c.Params.Get(key.Get()); val != "" {
+	keys := getAllTemplateKeys(c.Params.Values)
+	c.Log.Debugf("KEYS: %v", keys)
+	for k, v := range keys {
+		if val := c.Params.Get(k); val != "" {
 			templatesRaw = append(templatesRaw, models.NotifierTemplate{
 				Body: []byte(val),
-				ID:   key.ID(),
+				ID:   v,
 			})
-			key.Next()
-		} else {
-			break
 		}
 	}
 	templatesPrettied := make([]BodyParsed, len(templatesRaw))
@@ -223,16 +223,17 @@ const witnessMeBloodBag = `__        ___ _                       _
    \_/\_/  |_|\__|_| |_|\___||___/___(_)
                                         `
 
-type templateKey struct {
-	id int
-}
+var templateRe = regexp.MustCompile(`^template(\d+)$`)
 
-func (tk *templateKey) Next() {
-	tk.id++
-}
-func (tk *templateKey) Get() string {
-	return fmt.Sprintf("template%d", tk.id)
-}
-func (tk *templateKey) ID() int {
-	return tk.id
+func getAllTemplateKeys(form url.Values) map[string]int {
+	keys := make(map[string]int)
+	for k, _ := range form {
+		if templateRe.MatchString(k) {
+			res := templateRe.FindStringSubmatch(k)
+			if res != nil && len(res) > 1 {
+				keys[k], _ = strconv.Atoi(res[1])
+			}
+		}
+	}
+	return keys
 }
