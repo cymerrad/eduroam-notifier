@@ -25,8 +25,8 @@ func (c Notifier) Notify() revel.Result {
 	}
 
 	event := models.Event{
-		Body:      c.Params.JSON,
-		Timestamp: now,
+		Body:    c.Params.JSON,
+		Created: now,
 	}
 	if err := c.Txn.Insert(&event); err != nil {
 		c.Log.Errorf("Error inserting event into DB: %s", err.Error())
