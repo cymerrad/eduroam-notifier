@@ -201,16 +201,26 @@ func (c App) Settings() revel.Result {
 	s, err := c.retrieveSettingsFromSession()
 	if err != nil {
 		c.Validation.Error(err.Error())
+	} else {
+		err2 := c.saveSettings(s)
+		if err != nil {
+			c.Validation.Error(err2.Error())
+		}
 	}
 	if res, ok := c.HasErrorsRedirect(Curl.Index); ok {
 		return res
 	}
 
 	redirectTo := c.Params.Get("redirect")
-	c.Log.Debugf("Received: %v; redirect: %s", s, redirectTo)
 	if redirectTo == "curl" {
 		return c.Redirect(Curl.Index)
 	}
 
 	return c.Redirect(App.Index)
+}
+
+func (c App) saveSettings(s SettingsData) error {
+	c.Log.Debugf("Saving settings: %v", s)
+
+	return nil
 }
