@@ -218,7 +218,6 @@ func (c App) Settings() revel.Result {
 }
 
 func (c App) saveSettings(s SettingsData) error {
-	c.Log.Debugf("Saving settings: %v", s)
 	now := time.Now()
 
 	btz, _ := s.OtherParsed.Marshall()
