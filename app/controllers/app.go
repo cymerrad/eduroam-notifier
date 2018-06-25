@@ -226,22 +226,17 @@ func (c App) saveSettings(s SettingsData) error {
 		JSON:    btz,
 	}
 
-	// rules := make([]*models.NotifierRule, len(s.Rules))
-	// templates := make([]*models.NotifierTemplate, len(s.TemplatesRaw))
-
 	errors := make([]error, 0)
 
 	// copy, update created time and insert
 	for _, el := range s.Rules {
 		temp := models.NotifierRule(el)
 		temp.Created = now
-		// rules[i] = &temp
 		errors = append(errors, c.Txn.Insert(&temp))
 	}
 	for _, el := range s.TemplatesRaw {
 		temp := models.NotifierTemplate(el)
 		temp.Created = now
-		// templates[i] = &temp
 		errors = append(errors, c.Txn.Insert(&temp))
 	}
 	errors = append(errors, c.Txn.Insert(settings))
