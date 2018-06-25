@@ -5,6 +5,9 @@ import (
 	"eduroam-notifier/app/models"
 	"eduroam-notifier/app/routes"
 	"eduroam-notifier/app/template_system"
+	"encoding/json"
+	"errors"
+	"strings"
 
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
@@ -101,4 +104,106 @@ func (c App) Logout() revel.Result {
 		delete(c.Session, k)
 	}
 	return c.Redirect(routes.App.Index())
+}
+
+func (c App) retrieveSettingsFromDB() (s SettingsData, err error) {
+	txn := c.Txn
+	var templatesRaw []models.NotifierTemplate
+	str, _, _ := sq.StatementBuilder.Select("*").From("NotifierTemplate").ToSql()
+	_, _ = txn.Select(&templatesRaw, str)
+
+	var rules []models.NotifierRule
+	str2, _, _ := sq.StatementBuilder.Select("*").From("NotifierRule").ToSql()
+	_, _ = txn.Select(&rules, str2)
+
+	settings := models.NotifierSettings{}
+	str3 := "SELECT * FROM NotifierSettings WHERE ID = ( SELECT MAX(ID) FROM NotifierSettings ) LIMIT 1"
+	err = txn.SelectOne(&settings, str3)
+	if err != nil {
+		return s, errors.New("no settings")
+	}
+
+	templatesParsed := make([]BodyParsed, len(templatesRaw))
+	for ind, raw := range templatesRaw {
+		templatesParsed[ind] = BodyParsed{raw.ID, string(raw.Body)}
+	}
+
+	schemaParsed, _ := json.Marshal(template_system.Schema)
+	settingsParsed, _ := settings.Unmarshall()
+
+	return SettingsData{
+		Templates:    templatesParsed,
+		Rules:        rules,
+		OtherParsed:  settingsParsed,
+		Schema:       string(schemaParsed),
+		Other:        string(settings.JSON),
+		TemplatesRaw: templatesRaw,
+	}, nil
+}
+
+func (c App) retrieveSettingsFromSession() (s SettingsData, err error) {
+	otherRaw := c.Params.Get("other")
+	other := models.NotifierSettingsParsed{}
+	err = json.NewDecoder(strings.NewReader(otherRaw)).Decode(&other)
+	if err != nil {
+		return s, err
+	}
+
+	cases := c.Params.Values["settings-cases"]
+	rules, err := template_system.ParseRulesFromValues(cases)
+	if err != nil {
+		return s, err
+	}
+	templatesRaw := []models.NotifierTemplate{}
+	keys := getAllTemplateKeys(c.Params.Values)
+	c.Log.Debugf("KEYS: %v", keys)
+	for k, v := range keys {
+		if val := c.Params.Get(k); val != "" {
+			templatesRaw = append(templatesRaw, models.NotifierTemplate{
+				Body: []byte(val),
+				ID:   v,
+			})
+		}
+	}
+	templatesPrettied := make([]BodyParsed, len(templatesRaw))
+	for ind, tmpl := range templatesRaw {
+		templatesPrettied[ind] = BodyParsed{
+			ID:   tmpl.ID,
+			Body: string(tmpl.Body),
+		}
+	}
+
+	schemaParsed, _ := json.Marshal(template_system.Schema)
+
+	settings := SettingsData{
+		OtherParsed:  other,
+		Other:        otherRaw,
+		Rules:        rules,
+		TemplatesRaw: templatesRaw,
+		Templates:    templatesPrettied,
+		Schema:       string(schemaParsed),
+	}
+
+	return settings, err
+}
+
+func (c App) HasErrorsRedirect(val interface{}) (res revel.Result, ok bool) {
+	if c.Validation.HasErrors() {
+		// Store the validation errors in the flash context and redirect.
+		c.Validation.Keep()
+		c.FlashParams()
+		return c.Redirect(Curl.Index), true
+	}
+	return revel.ErrorResult{}, false
+}
+
+func (c App) Settings() revel.Result {
+	s, err := c.retrieveSettingsFromSession()
+	if err != nil {
+		c.Validation.Error(err.Error())
+	}
+	if res, ok := c.HasErrorsRedirect(Curl.Index); ok {
+		return res
+	}
+
 }

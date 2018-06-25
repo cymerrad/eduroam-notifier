@@ -15,6 +15,7 @@ POST    /login                                  App.Login
 GET     /logout                                 App.Logout
 GET     /curl                                   Curl.Index
 POST    /curl                                   Curl.Notify
+POST    /settings                               App.Settings
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

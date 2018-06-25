@@ -2,6 +2,12 @@
     {{if .settings}}
 
     <h2>Settings:</h2>
+    <div class="container" style="margin-bottom: 20px">
+        <button type="button" class="btn btn-lg btn-primary" id="save-settings">Save current settings</button>
+        <a class="btn btn-lg btn-danger" id="reload-settings" href="{{url "Curl.Index"}}">Reload saved settings</a>
+    </div>
+
+    <div class="container">
     <label for="templates">Templates</label>
     <ul class="list-group" id="templates">
     
@@ -28,10 +34,12 @@
             </div>
         </li>
     </ul>
+    </div>
 
     <div class="hidden" id="settings-templates"></div>
-
+    
         {{if .settings.Rules}}
+    <div class="container">
     <div class="form-group">
     <label for="cases">On/Do cases:</label>
     <table class="table table-hover">
@@ -77,14 +85,17 @@
         </tbody>
     </table>
     </div>
+    </div>
         {{end}}
 
+    <div class="container">
     <div class="form-group">
     <label for="other">Other:</label>
     <textarea name="other" class="form-control" rows="10" id="other"></textarea>
     <script>
         $('#other').val("{{.settings.Other}}");
     </script>  
+    </div>
     </div>
 
     <div class="hidden" id="settings-cases"></div>
