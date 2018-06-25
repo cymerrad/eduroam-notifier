@@ -159,7 +159,7 @@ func (c App) retrieveSettingsFromSession() (s SettingsData, err error) {
 		if val := c.Params.Get(k); val != "" {
 			templatesRaw = append(templatesRaw, models.NotifierTemplate{
 				Body: []byte(val),
-				ID:   v,
+				Name: v,
 			})
 		}
 	}
@@ -209,6 +209,8 @@ func (c App) Settings() revel.Result {
 	if res, ok := c.HasErrorsRedirect(Curl.Index); ok {
 		return res
 	}
+
+	c.Log.Debugf("Form: %v", c.Params.Values)
 
 	redirectTo := c.Params.Get("redirect")
 	if redirectTo == "curl" {

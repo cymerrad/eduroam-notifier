@@ -16,17 +16,17 @@
     
         {{if .settings.Templates}}
             {{range .settings.Templates}}
-        <li class="list-group-item"  id="template{{.ID}}">
+        <li class="list-group-item"  id="template-{{.Name}}">
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between;">
-                        <label for="templateText{{.ID}}" class="template-id">{{.Name}}</label>
-                        <button type="button" class="btn btn-xs btn-danger" onclick="deleteTemplate('{{.ID}}')"><span class="glyphicon glyphicon-trash"></span></button>
+                        <label for="templateText-{{.Name}}" class="template-id">{{.Name}}</label>
+                        <button type="button" class="btn btn-xs btn-danger" onclick="deleteTemplate('{{.Name}}')"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
-                <textarea name="template{{.ID}}" class="form-control" rows="10" id="templateText{{.ID}}"></textarea>
+                <textarea name="template-{{.Name}}" class="form-control" rows="10" id="templateText-{{.Name}}"></textarea>
             </div> 
 
             <script>
-                $('#templateText{{.ID}}').val("{{.Body}}");
+                $('#templateText-{{.Name}}').val("{{.Body}}");
             </script>  
         </li>
             {{end}}
@@ -274,8 +274,8 @@
         }
 
         function templateNameValid(newName) {
-
-            return false;
+            const validName = /^(\w)+$/;
+            return newName.match(validName) !== null;
         }
 
         newTemplateButton.click(() => {
@@ -287,6 +287,8 @@
                 lastChild.detach();
                 TEMPLATES.append(newTemplate);
                 TEMPLATES.append(lastChild);
+
+                return
             }
 
             var errAlert = $('#template-error'); 
@@ -297,7 +299,7 @@
 
         function generateTemplate(name) {
             id_prop = `template-${name}`;
-            id_prop_textarea = `templateText${name}`;
+            id_prop_textarea = `templateText-${name}`;
             return createElement(
                 "li",
                 { 

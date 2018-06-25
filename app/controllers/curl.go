@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/revel/revel"
@@ -124,15 +123,15 @@ const witnessMeBloodBag = `__        ___ _                       _
    \_/\_/  |_|\__|_| |_|\___||___/___(_)
                                         `
 
-var templateRe = regexp.MustCompile(`^template(\d+)$`)
+var templateRe = regexp.MustCompile(`^template-(\w+)$`)
 
-func getAllTemplateKeys(form url.Values) map[string]int {
-	keys := make(map[string]int)
+func getAllTemplateKeys(form url.Values) map[string]string {
+	keys := make(map[string]string)
 	for k, _ := range form {
 		if templateRe.MatchString(k) {
 			res := templateRe.FindStringSubmatch(k)
 			if res != nil && len(res) > 1 {
-				keys[k], _ = strconv.Atoi(res[1])
+				keys[k] = res[1]
 			}
 		}
 	}
