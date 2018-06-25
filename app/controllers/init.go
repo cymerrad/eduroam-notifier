@@ -60,7 +60,7 @@ func getConnectionString() string {
 	port := getParamString("db.port", "3306")
 	user := getParamString("db.user", "")
 	pass := getParamString("db.password", "")
-	dbname := getParamString("db.name", "auction")
+	dbname := getParamString("db.name", "eduroam")
 	protocol := getParamString("db.protocol", "tcp")
 	dbargs := getParamString("dbargs", " ")
 
@@ -215,14 +215,18 @@ Z poważaniem,
 		JSON:    btz,
 		Created: timeZero,
 	}
-	err := Dbm.Insert(demoSettings)
-	if err != nil {
-		revel.AppLog.Errorf("Inserting settings: %s", err.Error())
+	tSet := &models.NotifierSettings{}
+	res, err := Dbm.Select(tSet, models.GetNotifierSettings)
+	if err != nil || len(res) == 0 {
+		err := Dbm.Insert(demoSettings)
+		if err != nil {
+			revel.AppLog.Errorf("Inserting settings: %s", err.Error())
+		}
+		revel.AppLog.Info("Created example settings.")
 	}
-	revel.AppLog.Info("Inserted example settings.")
 
 	tTemp := &models.NotifierTemplate{}
-	res, err := Dbm.Select(tTemp, "SELECT * FROM NotifierTemplate;")
+	res, err = Dbm.Select(tTemp, models.GetAllNotifierTemplates)
 	if err != nil || len(res) == 0 {
 		if err := Dbm.Insert(&exampleTemplate); err != nil {
 			revel.AppLog.Errorf("Inserting template: %s", err.Error())
@@ -231,7 +235,7 @@ Z poważaniem,
 	}
 
 	tRule := &models.NotifierRule{}
-	res, err = Dbm.Select(tRule, "SELECT * FROM NotifierRule;")
+	res, err = Dbm.Select(tRule, models.GetAllNotifierRules)
 	if err != nil || len(res) == 0 {
 		for _, rule := range exampleRules {
 			err := Dbm.Insert(&rule)
@@ -256,9 +260,9 @@ func initializeGlobalVariables() {
 	var settings models.NotifierSettings
 	var err error
 
-	chillax(Dbm.Select(&templates, "SELECT * FROM NotifierTemplate;"))
-	chillax(Dbm.Select(&rules, "SELECT * FROM NotifierRule;"))
-	err = Dbm.SelectOne(&settings, "SELECT * FROM NotifierSettings ORDER BY -CreatedString LIMIT 1;")
+	chillax(Dbm.Select(&templates, models.GetAllNotifierTemplates))
+	chillax(Dbm.Select(&rules, models.GetAllNotifierRules))
+	err = Dbm.SelectOne(&settings, models.GetNotifierSettings)
 	if err != nil {
 		revel.AppLog.Errorf("Failed initialization: %s", err.Error())
 	}
