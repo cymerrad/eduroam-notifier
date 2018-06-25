@@ -114,11 +114,6 @@ func (c Curl) dryRun(event models.EventParsed, template *template_system.T) stri
 		out = append(out, result)
 	}
 
-	out = append(out, ResponseAction{
-		Recipient: "Blood-bag",
-		Body:      witnessMeBloodBag,
-	})
-
 	btz, _ := json.MarshalIndent(out, "", "  ")
 
 	return string(btz)
