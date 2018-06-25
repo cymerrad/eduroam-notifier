@@ -49,6 +49,7 @@ func (c Curl) Index() revel.Result {
 	}
 
 	c.ViewArgs["settings"] = settings
+	c.ViewArgs["curl"] = map[string]string{"hello": "there"}
 
 	return c.Render()
 }

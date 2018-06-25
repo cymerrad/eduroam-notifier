@@ -110,18 +110,21 @@
         var ONF = $('#on-field');
         var DOF = $('#do-field');
         var VALF = $('#value-field');
-        var addRuleButton = $('#adding-rule-submit');
         var CASES = $('#cases');
         var TEMPLATES = $('#templates');
+        
+        var addRuleButton = $('#adding-rule-submit');
         var newTemplateButton = $('#new-template-button');
-        var SAVE_SETTINGS_BUTTON = $('#save-settings');
+        var saveSettingsButton = $('#save-settings');
 
-        SAVE_SETTINGS_BUTTON.click(function(event){
+        saveSettingsButton.click(function(event){
             transferVisibleToHiddenForm();
-            console.log($('#json-form'));
 
-            // if ok then submit the form
-            // FORM.submit(); // FIXME not quite
+            // we are contained inside a form named "json-form"
+            var FORM = $('#json-form');
+            // we will just change it's destination
+            FORM.attr('action', '{{url "App.Settings"}}');
+            FORM.submit();
             return
             
         });
