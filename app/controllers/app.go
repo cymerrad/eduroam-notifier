@@ -109,16 +109,13 @@ func (c App) Logout() revel.Result {
 func (c App) retrieveSettingsFromDB() (s SettingsData, err error) {
 	txn := c.Txn
 	var templatesRaw []models.NotifierTemplate
-	str, _, _ := sq.StatementBuilder.Select("*").From("NotifierTemplate").ToSql()
-	_, _ = txn.Select(&templatesRaw, str)
+	_, _ = txn.Select(&templatesRaw, models.GetAllNotifierTemplates)
 
 	var rules []models.NotifierRule
-	str2, _, _ := sq.StatementBuilder.Select("*").From("NotifierRule").ToSql()
-	_, _ = txn.Select(&rules, str2)
+	_, _ = txn.Select(&rules, models.GetAllNotifierRules)
 
 	settings := models.NotifierSettings{}
-	str3 := "SELECT * FROM NotifierSettings WHERE CreatedString = ( SELECT MAX(CreatedString) FROM NotifierSettings ) LIMIT 1"
-	err = txn.SelectOne(&settings, str3)
+	err = txn.SelectOne(&settings, models.GetNotifierSettings)
 	if err != nil {
 		return s, errors.New("no settings")
 	}
