@@ -48,6 +48,7 @@ func (ns NotifierSettingsParsed) Marshall() ([]byte, error) {
 
 type NotifierTemplate struct {
 	ID            int
+	Name          string
 	Body          []byte
 	CreatedString string
 

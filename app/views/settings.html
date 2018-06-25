@@ -19,7 +19,7 @@
         <li class="list-group-item"  id="template{{.ID}}">
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between;">
-                        <label for="templateText{{.ID}}" class="template-id">{{.ID}}</label>
+                        <label for="templateText{{.ID}}" class="template-id">{{.Name}}</label>
                         <button type="button" class="btn btn-xs btn-danger" onclick="deleteTemplate('{{.ID}}')"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
                 <textarea name="template{{.ID}}" class="form-control" rows="10" id="templateText{{.ID}}"></textarea>
@@ -34,10 +34,19 @@
         <li class="list-group-item" id="templates-new-button">
             <div style="display: flex; flex-direction: row-reverse;">
                 <button type="button" class="btn btn-lg btn-success" id="new-template-button">New template</button>
+                <input type="text" class="form-control" style="max-width: 200px" id="new-template-name" placeholder="New template name">
             </div>
         </li>
     </ul>
+
+    <div class="row">
+        <div class="span6">
+            <div class="alert alert-danger" hidden id="template-error"></div>
+        </div>
     </div>
+    
+    </div>
+
 
     <div class="hidden" id="settings-templates"></div>
     
@@ -88,6 +97,13 @@
         </tbody>
     </table>
     </div>
+
+    <div class="row">
+        <div class="span6">
+            <div class="alert alert-danger" hidden id="rules-error"></div>
+        </div>
+    </div>
+
     </div>
         {{end}}
 
@@ -190,7 +206,7 @@
                 CASES.append(newRow);
                 CASES.append(lastChild);
             } else {
-                var errAlert = $('#json-error'); 
+                var errAlert = $('#rules-error'); 
                 errAlert.show();
                 errAlert.text("None of the fields can be empty.");
                 setTimeout(function(){errAlert.hide();}, 3000);
@@ -257,37 +273,36 @@
             $(`#${id_}`).remove();
         }
 
-        function getNextTemplateNumber() {
-            var WAT = $('.template-id');
-            taken = WAT.toArray().map((val) => Number(val.innerText));
-            taken.sort((a,b) => a>b)
+        function templateNameValid(newName) {
 
-            possible = 1;
-            for (i=0; i<taken.length; i++) {
-                if (taken[i] != possible) {
-                    return possible;
-                }
-                possible ++;
-            }
-            return possible;
+            return false;
         }
 
         newTemplateButton.click(() => {
-            newTemplate = generateTemplate(getNextTemplateNumber());
-            lastChild = TEMPLATES.children('#templates-new-button');
-            lastChild.detach();
-            TEMPLATES.append(newTemplate);
-            TEMPLATES.append(lastChild);
+            var newName = $('#new-template-name').val();
+
+            if (templateNameValid(newName)) {
+                newTemplate = generateTemplate(newName);
+                lastChild = TEMPLATES.children('#templates-new-button');
+                lastChild.detach();
+                TEMPLATES.append(newTemplate);
+                TEMPLATES.append(lastChild);
+            }
+
+            var errAlert = $('#template-error'); 
+            errAlert.show();
+            errAlert.text("Invalid template name.");
+            setTimeout(function(){errAlert.hide();}, 3000)
         });
 
-        function generateTemplate(id_) {
-            id_prop = `template${id_}`;
-            id_prop_textarea = `templateText${id_}`;
+        function generateTemplate(name) {
+            id_prop = `template-${name}`;
+            id_prop_textarea = `templateText${name}`;
             return createElement(
                 "li",
                 { 
                     class: "list-group-item",
-                     id: id_prop,
+                    id: id_prop,
                 },
                 createElement(
                 "div",
@@ -298,13 +313,13 @@
                     createElement("label", {
                         for: id_prop_textarea,
                         class: "template-id",
-                    }, `${id_}`),
+                    }, `${name}`),
                     createElement(
                     "button",
                     {
                     type: "button",
                     class: "btn btn-primary btn-danger btn-xs",
-                    onclick: `deleteTemplate('${id_}')`
+                    onclick: `deleteTemplate('${name}')`
                     },
                     createElement("span", { class: "glyphicon glyphicon-trash" })
                     )
@@ -319,8 +334,8 @@
             );
         }
 
-        function deleteTemplate(id_) {
-            $(`#template${id_}`).remove();
+        function deleteTemplate(name) {
+            $(`#template-${name}`).remove();
         }
 
 

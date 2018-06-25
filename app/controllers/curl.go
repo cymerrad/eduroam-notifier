@@ -32,6 +32,7 @@ type SettingsData struct {
 
 type BodyParsed struct {
 	ID   int
+	Name string
 	Body string
 }
 

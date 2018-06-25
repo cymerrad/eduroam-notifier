@@ -123,7 +123,7 @@ func (c App) retrieveSettingsFromDB() (s SettingsData, err error) {
 
 	templatesParsed := make([]BodyParsed, len(templatesRaw))
 	for ind, raw := range templatesRaw {
-		templatesParsed[ind] = BodyParsed{raw.ID, string(raw.Body)}
+		templatesParsed[ind] = BodyParsed{raw.ID, raw.Name, string(raw.Body)}
 	}
 
 	schemaParsed, _ := json.Marshal(template_system.Schema)
@@ -167,6 +167,7 @@ func (c App) retrieveSettingsFromSession() (s SettingsData, err error) {
 	for ind, tmpl := range templatesRaw {
 		templatesPrettied[ind] = BodyParsed{
 			ID:   tmpl.ID,
+			Name: tmpl.Name,
 			Body: string(tmpl.Body),
 		}
 	}

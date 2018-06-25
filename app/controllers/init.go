@@ -185,6 +185,7 @@ Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzen
 Z poważaniem,
 {{signature}}`
 	exampleTemplate := models.NotifierTemplate{
+		Name:    "wrong_password",
 		Body:    []byte(exTemp),
 		Created: timeZero,
 	}
@@ -204,7 +205,7 @@ Z poważaniem,
 		{
 			On:      "action",
 			Do:      "send_template",
-			Value:   "{\"action\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"send_template\" : \"1\"}",
+			Value:   "{\"action\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"send_template\" : \"wrong_password\"}",
 			Created: timeZero,
 		},
 	}
