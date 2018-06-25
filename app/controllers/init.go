@@ -145,8 +145,11 @@ func defineNotifierTables(dbm *gorp.DbMap) {
 	conditionalDropTable(dbm, "NotifierSettings")
 
 	t1 := dbm.AddTable(models.NotifierRule{}).SetKeys(true, "ID")
+	// t1.ColMap("Created").Transient = true
 	t2 := dbm.AddTable(models.NotifierTemplate{}).SetKeys(true, "ID")
+	// t2.ColMap("Created").Transient = true
 	t := dbm.AddTable(models.NotifierSettings{}).SetKeys(true, "ID")
+	// t.ColMap("Created").Transient = true
 
 	t, t1 = t1, t // so the compiler won't complain
 	t, t2 = t2, t
@@ -254,7 +257,7 @@ func initializeGlobalVariables() {
 
 	chillax(Dbm.Select(&templates, "SELECT * FROM NotifierTemplate;"))
 	chillax(Dbm.Select(&rules, "SELECT * FROM NotifierRule;"))
-	err = Dbm.SelectOne(&settings, "SELECT * FROM NotifierSettings ORDER BY -CREATED LIMIT 1;")
+	err = Dbm.SelectOne(&settings, "SELECT * FROM NotifierSettings ORDER BY -Created LIMIT 1;")
 	if err != nil {
 		revel.AppLog.Errorf("Failed initialization: %s", err.Error())
 	}
