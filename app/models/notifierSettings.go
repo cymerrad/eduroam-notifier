@@ -42,6 +42,10 @@ type NotifierSettingsParsed struct {
 	Cooldown int64 `json:"cooldown"`
 }
 
+func (ns NotifierSettingsParsed) Marshall() ([]byte, error) {
+	return json.Marshal(ns)
+}
+
 type NotifierTemplate struct {
 	ID            int
 	Body          []byte

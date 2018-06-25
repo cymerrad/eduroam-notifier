@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
@@ -218,6 +219,42 @@ func (c App) Settings() revel.Result {
 
 func (c App) saveSettings(s SettingsData) error {
 	c.Log.Debugf("Saving settings: %v", s)
+	now := time.Now()
+
+	btz, _ := s.OtherParsed.Marshall()
+	settings := &models.NotifierSettings{
+		Created: now,
+		JSON:    btz,
+	}
+
+	// rules := make([]*models.NotifierRule, len(s.Rules))
+	// templates := make([]*models.NotifierTemplate, len(s.TemplatesRaw))
+
+	errors := make([]error, 0)
+
+	// copy, update created time and insert
+	for _, el := range s.Rules {
+		temp := models.NotifierRule(el)
+		temp.Created = now
+		// rules[i] = &temp
+		errors = append(errors, c.Txn.Insert(&temp))
+	}
+	for _, el := range s.TemplatesRaw {
+		temp := models.NotifierTemplate(el)
+		temp.Created = now
+		// templates[i] = &temp
+		errors = append(errors, c.Txn.Insert(&temp))
+	}
+	errors = append(errors, c.Txn.Insert(settings))
+
+	// TODO one error to rule them all?
+	func(errs ...error) {
+		for _, e := range errs {
+			if e != nil {
+				c.Log.Errorf("Error adding new settings: %s", e.Error())
+			}
+		}
+	}(errors...)
 
 	return nil
 }
