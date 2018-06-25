@@ -170,9 +170,10 @@ func createTestUsers() {
 }
 
 func createTestSettings() {
-	exampleSetting := models.NotifierSettingsParsed{
+	var exampleSetting = models.NotifierSettingsParsed{
 		Cooldown: int64(7 * 24 * time.Hour),
 	}
+	var timeZero = time.Unix(0, 0)
 
 	const exTemp = `Witam.
 Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{occurence}}.
@@ -180,30 +181,35 @@ Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzen
 Z poważaniem,
 {{signature}}`
 	exampleTemplate := models.NotifierTemplate{
-		Body: []byte(exTemp),
+		Body:    []byte(exTemp),
+		Created: timeZero,
 	}
 	exampleRules := []models.NotifierRule{
 		{
-			On:    "template_tag",
-			Do:    "insert_text",
-			Value: "{\"template_tag\" : \"signature\", \"insert_text\" : \"DSK UW\"}",
+			On:      "template_tag",
+			Do:      "insert_text",
+			Value:   "{\"template_tag\" : \"signature\", \"insert_text\" : \"DSK UW\"}",
+			Created: timeZero,
 		},
 		{
-			On:    "template_tag",
-			Do:    "substitute_with_field",
-			Value: "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
+			On:      "template_tag",
+			Do:      "substitute_with_field",
+			Value:   "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
+			Created: timeZero,
 		},
 		{
-			On:    "action",
-			Do:    "send_template",
-			Value: "{\"action\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"send_template\" : \"1\"}",
+			On:      "action",
+			Do:      "send_template",
+			Value:   "{\"action\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"send_template\" : \"1\"}",
+			Created: timeZero,
 		},
 	}
 
 	// insert if not existent... or not... it depends
 	btz, _ := json.MarshalIndent(exampleSetting, "", "  ")
 	demoSettings := &models.NotifierSettings{
-		JSON: btz,
+		JSON:    btz,
+		Created: timeZero,
 	}
 	err := Dbm.Insert(demoSettings)
 	if err != nil {
@@ -248,7 +254,7 @@ func initializeGlobalVariables() {
 
 	chillax(Dbm.Select(&templates, "SELECT * FROM NotifierTemplate;"))
 	chillax(Dbm.Select(&rules, "SELECT * FROM NotifierRule;"))
-	err = Dbm.SelectOne(&settings, "SELECT * FROM NotifierSettings ORDER BY -ID LIMIT 1;")
+	err = Dbm.SelectOne(&settings, "SELECT * FROM NotifierSettings ORDER BY -CREATED LIMIT 1;")
 	if err != nil {
 		revel.AppLog.Errorf("Failed initialization: %s", err.Error())
 	}

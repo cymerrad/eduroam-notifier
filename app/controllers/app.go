@@ -117,7 +117,7 @@ func (c App) retrieveSettingsFromDB() (s SettingsData, err error) {
 	_, _ = txn.Select(&rules, str2)
 
 	settings := models.NotifierSettings{}
-	str3 := "SELECT * FROM NotifierSettings WHERE ID = ( SELECT MAX(ID) FROM NotifierSettings ) LIMIT 1"
+	str3 := "SELECT * FROM NotifierSettings WHERE CREATED = ( SELECT MAX(CREATED) FROM NotifierSettings ) LIMIT 1"
 	err = txn.SelectOne(&settings, str3)
 	if err != nil {
 		return s, errors.New("no settings")
@@ -200,11 +200,11 @@ func (c App) HasErrorsRedirect(val interface{}) (res revel.Result, ok bool) {
 func (c App) Settings() revel.Result {
 	s, err := c.retrieveSettingsFromSession()
 	if err != nil {
-		c.Validation.Error(err.Error())
+		c.Validation.Error("Corrupted form %s", err.Error())
 	} else {
 		err2 := c.saveSettings(s)
 		if err != nil {
-			c.Validation.Error(err2.Error())
+			c.Validation.Error("Saving settings failed %s", err2.Error())
 		}
 	}
 	if res, ok := c.HasErrorsRedirect(Curl.Index); ok {

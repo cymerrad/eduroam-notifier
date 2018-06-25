@@ -2,11 +2,13 @@ package models
 
 import (
 	"encoding/json"
+	"time"
 )
 
 type NotifierSettings struct {
-	ID   int
-	JSON []byte
+	ID      int
+	JSON    []byte
+	Created time.Time
 }
 
 func (ns NotifierSettings) Unmarshall() (NotifierSettingsParsed, error) {
@@ -20,11 +22,13 @@ type NotifierSettingsParsed struct {
 }
 
 type NotifierTemplate struct {
-	ID   int
-	Body []byte
+	ID      int
+	Body    []byte
+	Created time.Time
 }
 
 type NotifierRule struct {
 	ID            int
 	On, Do, Value string
+	Created       time.Time
 }
