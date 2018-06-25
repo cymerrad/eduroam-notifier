@@ -3,8 +3,8 @@ package controllers
 import (
 	"database/sql"
 
-	"github.com/go-gorp/gorp"
 	"github.com/revel/revel"
+	gorp "gopkg.in/gorp.v2"
 )
 
 var (

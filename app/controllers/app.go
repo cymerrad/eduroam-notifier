@@ -117,7 +117,7 @@ func (c App) retrieveSettingsFromDB() (s SettingsData, err error) {
 	_, _ = txn.Select(&rules, str2)
 
 	settings := models.NotifierSettings{}
-	str3 := "SELECT * FROM NotifierSettings WHERE Created = ( SELECT MAX(Created) FROM NotifierSettings ) LIMIT 1"
+	str3 := "SELECT * FROM NotifierSettings WHERE CreatedString = ( SELECT MAX(CreatedString) FROM NotifierSettings ) LIMIT 1"
 	err = txn.SelectOne(&settings, str3)
 	if err != nil {
 		return s, errors.New("no settings")
