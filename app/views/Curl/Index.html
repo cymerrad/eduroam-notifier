@@ -41,20 +41,12 @@
 <script>
     var SUBMIT_BUTTON = $('#submit-button');
     var FORM = $('#json-form');
-    var HIDDEN_CASES = $('#settings-cases');
-    var VISIBLE_VALUES = $('.settings-value'); // mind the period
 
     SUBMIT_BUTTON.click(function(event){
         event.preventDefault();
         if ( validate( $('#json').val() ) ) {
-            var VISIBLE_VALUES = $('.settings-value'); // refind
-
-            $.each(VISIBLE_VALUES, (ind, elem)=>{
-                newoption = document.createElement("input");
-                newoption.value = `${elem.innerText}`;
-                newoption.name = "settings-cases";
-                HIDDEN_CASES.append(newoption);
-            });
+            // this should be defined in 'settings.html' template
+            transferVisibleToHiddenForm();
 
             // if ok then submit the form
             FORM.submit();
@@ -66,13 +58,6 @@
         errAlert.show();
         errAlert.text("Invalid JSON");
         setTimeout(function(){errAlert.hide();}, 3000)
-    })
-
-    FORM.submit(function(event){
-        contents = FORM.serializeArray();
-        console.log("visible", VISIBLE_VALUES);
-        console.log("contents", contents);
-        // event.preventDefault();
     });
 
     function validate(text) {

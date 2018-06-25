@@ -3,8 +3,11 @@
 
     <h2>Settings:</h2>
     <div class="container" style="margin-bottom: 20px">
-        <button type="button" class="btn btn-lg btn-primary" id="save-settings">Save current settings</button>
+        <button type="button" class="btn btn-lg btn-primary" id="save-settings" >Save current settings</button>
         <a class="btn btn-lg btn-danger" id="reload-settings" href="{{url "Curl.Index"}}">Reload saved settings</a>
+        {{if .curl}}
+        <input hidden class="hidden" name="redirect" value="curl">
+        {{end}}
     </div>
 
     <div class="container">
@@ -109,8 +112,31 @@
         var VALF = $('#value-field');
         var addRuleButton = $('#adding-rule-submit');
         var CASES = $('#cases');
-        var TEMPLATES = $('#templates')
+        var TEMPLATES = $('#templates');
         var newTemplateButton = $('#new-template-button');
+        var SAVE_SETTINGS_BUTTON = $('#save-settings');
+
+        SAVE_SETTINGS_BUTTON.click(function(event){
+            transferVisibleToHiddenForm();
+            console.log($('#json-form'));
+
+            // if ok then submit the form
+            // FORM.submit(); // FIXME not quite
+            return
+            
+        });
+
+        function transferVisibleToHiddenForm() {
+            var VISIBLE_VALUES = $('.settings-value'); // refind
+            var HIDDEN_CASES = $('#settings-cases');
+            HIDDEN_CASES.empty();
+            $.each(VISIBLE_VALUES, (ind, elem)=>{
+                newoption = document.createElement("input");
+                newoption.value = `${elem.innerText}`;
+                newoption.name = "settings-cases";
+                HIDDEN_CASES.append(newoption);
+            });
+        }
 
         // add empty option
         newoption = document.createElement("option");
@@ -293,6 +319,7 @@
         function deleteTemplate(id_) {
             $(`#template${id_}`).remove();
         }
+
 
     </script>
         {{end}}

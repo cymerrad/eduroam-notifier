@@ -206,4 +206,11 @@ func (c App) Settings() revel.Result {
 		return res
 	}
 
+	redirectTo := c.Params.Get("redirect")
+	c.Log.Debugf("Received: %v; redirect: %s", s, redirectTo)
+	if redirectTo == "curl" {
+		return c.Redirect(Curl.Index)
+	}
+
+	return c.Redirect(App.Index)
 }
