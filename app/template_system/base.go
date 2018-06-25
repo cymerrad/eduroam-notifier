@@ -159,6 +159,7 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 	return out, nil
 }
 
+// TODO generally this is now broken, bc templates are identified by their names and not ID
 func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	// get the template we need
 	tmplID := t.Actions[Action(fieldsStruct.Action)]
