@@ -180,7 +180,7 @@ func createTestSettings() {
 	var timeZero = time.Unix(0, 0)
 
 	const exTemp = `Witam.
-Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{occurence}}.
+Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{COUNT_MAC}}.
 
 Z poważaniem,
 {{signature}}`
