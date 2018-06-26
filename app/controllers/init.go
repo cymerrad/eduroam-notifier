@@ -103,6 +103,8 @@ var InitDb = func() {
 	defineUserTable(Dbm)
 	defineMessageTable(Dbm)
 	defineNotifierTables(Dbm)
+	defineMailMessageTable(Dbm)
+	defineOptOutTable(Dbm)
 
 	if err := Dbm.CreateTablesIfNotExists(); err != nil {
 		revel.AppLog.Fatalf("Creating tables: %s", err.Error())
@@ -121,7 +123,7 @@ func defineMessageTable(dbm *gorp.DbMap) {
 	conditionalDropTable(dbm, "Message")
 
 	// set "id" as primary key and autoincrement
-	_ = dbm.AddTable(models.Message{}).SetKeys(false, "ID")
+	_ = dbm.AddTable(models.Message{}).SetKeys(true, "ID")
 }
 
 func defineUserTable(dbm *gorp.DbMap) {
@@ -132,7 +134,7 @@ func defineUserTable(dbm *gorp.DbMap) {
 			t.ColMap(col).MaxSize = size
 		}
 	}
-	t := dbm.AddTable(models.User{}).SetKeys(true, "UserId")
+	t := dbm.AddTable(models.User{}).SetKeys(true, "ID")
 	t.ColMap("Password").Transient = true
 	setColumnSizes(t, map[string]int{
 		"Username": 20,
@@ -154,6 +156,22 @@ func defineNotifierTables(dbm *gorp.DbMap) {
 
 	t, t1 = t1, t // so the compiler won't complain
 	t, t2 = t2, t
+}
+
+func defineMailMessageTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "MailMessage")
+
+	// set "id" as primary key and autoincrement
+	t := dbm.AddTable(models.MailMessage{}).SetKeys(true, "ID")
+	t.ColMap("Created").Transient = true
+}
+
+func defineOptOutTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "OptOut")
+
+	// set "id" as primary key and autoincrement
+	t := dbm.AddTable(models.OptOut{}).SetKeys(true, "ID")
+	t.ColMap("Created").Transient = true
 }
 
 func createTestUsers() {

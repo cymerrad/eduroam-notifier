@@ -9,7 +9,7 @@ import (
 )
 
 type MailMessage struct {
-	ID            string `json:"-"`
+	ID            int    `json:"-"`
 	EventID       int    `json:"event_id"`
 	CreatedString string `json:"timestamp"`
 	Recipient     string `json:"recipient"`

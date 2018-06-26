@@ -7,7 +7,7 @@ import (
 )
 
 type OptOut struct {
-	ID            string
+	ID            int
 	CreatedString string
 	Mac           string
 	Pesel         string
