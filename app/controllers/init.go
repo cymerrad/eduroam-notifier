@@ -179,8 +179,12 @@ func createTestSettings() {
 	}
 	var timeZero = time.Unix(0, 0)
 
+	// TODO
+	// Move  this into app.conf
+
 	const exTemp = `Witam.
 Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{COUNT_MAC}}.
+Jeżeli nie chcesz otrzymywać więcej takich maili, kliknij w {{CANCEL_LINK}}.
 
 Z poważaniem,
 {{signature}}`
@@ -200,6 +204,12 @@ Z poważaniem,
 			On:      "template_tag",
 			Do:      "substitute_with_field",
 			Value:   "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
+			Created: timeZero,
+		},
+		{
+			On:      "template_tag",
+			Do:      "substitute_with_field",
+			Value:   "{\"template_tag\" : \"pesel\", \"substitute_with_field\" : \"Pesel\"}",
 			Created: timeZero,
 		},
 		{
