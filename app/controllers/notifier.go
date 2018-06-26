@@ -5,6 +5,7 @@ import (
 	"eduroam-notifier/app/template_system"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/revel/revel"
@@ -69,12 +70,14 @@ type ResponseAction struct {
 	Error     string `json:"error,omitempty"`
 }
 
-func interpretEvent(event models.EventParsed, templateSystem *template_system.T) ([]models.MailMessage, error) {
+func (c App) interpretEvent(event models.EventParsed, templateSystem *template_system.T) ([]models.MailMessage, error) {
 	out := make([]models.MailMessage, 0)
 
 	for _, match := range event.CheckResult.MatchingMessages {
 		extras := make(map[string]string)
 		msg := match.ToMessage(0)
+
+		// PRE-RENDER CHECKS
 
 		// CONSTANTS FOR TEMPLATING
 		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
@@ -101,7 +104,7 @@ func interpretEvent(event models.EventParsed, templateSystem *template_system.T)
 		result := interpretMessage(match.Fields, extras, templateSystem)
 		out = append(out, result)
 	}
-	
+
 	return out, nil
 }
 
