@@ -80,6 +80,7 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 		case OnAction:
 			switch rl.Do {
 			case DoActionSendTemplate:
+				// TODO what if these are empty? Do some error handling finally
 				action := values[OnAction]
 				templateID := values[DoActionSendTemplate]
 				outA[Action(action)] = TemplateID(templateID)
