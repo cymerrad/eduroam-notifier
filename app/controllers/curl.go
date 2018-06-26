@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/revel/revel"
@@ -107,7 +108,16 @@ func (c Curl) dryRun(event models.EventParsed, template *template_system.T) stri
 	out := make([]ResponseAction, 0)
 
 	for _, match := range event.CheckResult.MatchingMessages {
-		result := interpretMessage(match.Fields, template)
+		extras := make(map[string]string)
+		msg := match.ToMessage(0)
+		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		if err != nil {
+			c.Log.Errorf("Executing counting query: %s", err.Error())
+		} else {
+			extras["COUNT_MAC"] = strconv.FormatInt(countMsgs, 10)
+		}
+
+		result := interpretMessage(match.Fields, extras, template)
 		out = append(out, result)
 	}
 

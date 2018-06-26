@@ -159,7 +159,7 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 	return out, nil
 }
 
-func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
+func (t *T) Input(fieldsStruct models.EventMessageFields, extras map[string]string) (string, error) {
 	// get the template we need
 	tmplID := t.Actions[Action(fieldsStruct.Action)]
 	tmpl, ok := t.Templates[tmplID]
@@ -183,6 +183,10 @@ func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	for key, value := range t.ReplaceWithConst {
 		data[string(key)] = string(value)
 	}
+	for key, value := range extras {
+		data[key] = value
+	}
+
 	revel.AppLog.Debugf("fieldsMap %#v", fieldsMap)
 	revel.AppLog.Debugf("fieldsStruct %#v", fieldsStruct)
 	revel.AppLog.Debugf("Data for template: %#v", data)

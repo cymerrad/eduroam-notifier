@@ -49,7 +49,7 @@ func (c Notifier) Notify() revel.Result {
 
 		c.Log.Debugf("Success inserting message %v", msg)
 
-		interpretMessage(match.Fields, globalTemplate)
+		interpretMessage(match.Fields, nil, globalTemplate)
 
 	}
 
@@ -69,10 +69,10 @@ type ResponseAction struct {
 	Error     string `json:"error,omitempty"`
 }
 
-func interpretMessage(fields models.EventMessageFields, a *template_system.T) (resp ResponseAction) {
+func interpretMessage(fields models.EventMessageFields, extras map[string]string, a *template_system.T) (resp ResponseAction) {
 	revel.AppLog.Debugf("Doing something magical with %#v", fields)
 
-	output, err := a.Input(fields)
+	output, err := a.Input(fields, extras)
 	if err != nil {
 		resp.Error = err.Error()
 		resp.Recipient = "none (do nothing)"
