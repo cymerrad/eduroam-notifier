@@ -69,7 +69,43 @@ type ResponseAction struct {
 	Error     string `json:"error,omitempty"`
 }
 
-func interpretMessage(fields models.EventMessageFields, extras map[string]string, a *template_system.T) (resp ResponseAction) {
+func interpretEvent(event models.EventParsed, templateSystem *template_system.T) ([]models.MailMessage, error) {
+	out := make([]models.MailMessage, 0)
+
+	for _, match := range event.CheckResult.MatchingMessages {
+		extras := make(map[string]string)
+		msg := match.ToMessage(0)
+
+		// CONSTANTS FOR TEMPLATING
+		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		if err != nil {
+			c.Log.Errorf("Executing counting query: %s", err.Error())
+		} else {
+			extras["COUNT_MAC"] = strconv.FormatInt(countMsgs, 10)
+		}
+
+		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByPesel(msg))
+		if err != nil {
+			c.Log.Errorf("Executing counting query: %s", err.Error())
+		} else {
+			extras["COUNT_PESEL"] = strconv.FormatInt(countMsgs, 10)
+		}
+
+		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByUsername(msg))
+		if err != nil {
+			c.Log.Errorf("Executing counting query: %s", err.Error())
+		} else {
+			extras["COUNT_USERNAME"] = strconv.FormatInt(countMsgs, 10)
+		}
+
+		result := interpretMessage(match.Fields, extras, templateSystem)
+		out = append(out, result)
+	}
+	
+	return out, nil
+}
+
+func interpretMessage(fields models.EventMessageFields, extras map[string]string, a *template_system.T) (resp models.MailMessage) {
 	revel.AppLog.Debugf("Doing something magical with %#v", fields)
 
 	output, err := a.Input(fields, extras)
@@ -90,6 +126,7 @@ func interpretMessage(fields models.EventMessageFields, extras map[string]string
 	return
 }
 
+// TODO
 // this might seriously change (e.g. calls to some other service)
 func determineRecipient(fields models.EventMessageFields) (string, error) {
 	if fields.SourceUser == "" {

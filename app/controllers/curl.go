@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/revel/revel"
@@ -104,38 +103,8 @@ func (c Curl) Notify() revel.Result {
 	return c.RenderTemplate("Curl/Index.html")
 }
 
-func (c Curl) dryRun(event models.EventParsed, template *template_system.T) string {
-	out := make([]ResponseAction, 0)
-
-	for _, match := range event.CheckResult.MatchingMessages {
-		extras := make(map[string]string)
-		msg := match.ToMessage(0)
-
-		// CONSTANTS FOR TEMPLATING
-		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
-		if err != nil {
-			c.Log.Errorf("Executing counting query: %s", err.Error())
-		} else {
-			extras["COUNT_MAC"] = strconv.FormatInt(countMsgs, 10)
-		}
-
-		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByPesel(msg))
-		if err != nil {
-			c.Log.Errorf("Executing counting query: %s", err.Error())
-		} else {
-			extras["COUNT_PESEL"] = strconv.FormatInt(countMsgs, 10)
-		}
-
-		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByUsername(msg))
-		if err != nil {
-			c.Log.Errorf("Executing counting query: %s", err.Error())
-		} else {
-			extras["COUNT_USERNAME"] = strconv.FormatInt(countMsgs, 10)
-		}
-
-		result := interpretMessage(match.Fields, extras, template)
-		out = append(out, result)
-	}
+func (c Curl) dryRun(event models.EventParsed, templateSystem *template_system.T) string {
+	out, _ := interpretEvent(event, templateSystem)
 
 	btz, _ := json.MarshalIndent(out, "", "  ")
 
