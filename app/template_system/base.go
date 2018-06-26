@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -47,7 +46,7 @@ func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*te
 	out = make(map[TemplateID]*template.Template)
 
 	for _, tm := range templates {
-		tmID := TemplateID(strconv.Itoa(tm.ID))
+		tmID := TemplateID(tm.Name)
 
 		// well crap, I totally forgot about how powerfull Golang's templating is
 		tmBody := string(tm.Body)
@@ -159,7 +158,6 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 	return out, nil
 }
 
-// TODO generally this is now broken, bc templates are identified by their names and not ID
 func (t *T) Input(fieldsStruct models.EventMessageFields) (string, error) {
 	// get the template we need
 	tmplID := t.Actions[Action(fieldsStruct.Action)]
