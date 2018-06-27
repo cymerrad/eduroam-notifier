@@ -12,7 +12,7 @@ import (
 )
 
 type Curl struct {
-	App
+	Notifier
 }
 
 type CurlData struct {
