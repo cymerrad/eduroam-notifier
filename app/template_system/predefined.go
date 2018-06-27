@@ -1,4 +1,4 @@
-package template_system
+package ts
 
 const (
 	COUNT_MAC      = "COUNT_MAC"

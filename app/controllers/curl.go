@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"eduroam-notifier/app/models"
-	"eduroam-notifier/app/template_system"
+	ts "eduroam-notifier/app/template_system"
 	"encoding/json"
 	"net/url"
 	"regexp"
@@ -85,7 +85,7 @@ func (c Curl) Notify() revel.Result {
 		return res
 	}
 
-	templates, err := template_system.New(settings.OtherParsed, settings.Rules, settings.TemplatesRaw)
+	templates, err := ts.New(settings.OtherParsed, settings.Rules, settings.TemplatesRaw)
 	if err != nil {
 		c.Validation.Error("Error occurred: %s", err.Error())
 	}
@@ -103,7 +103,7 @@ func (c Curl) Notify() revel.Result {
 	return c.RenderTemplate("Curl/Index.html")
 }
 
-func (c Curl) dryRun(event models.EventParsed, templateSystem *template_system.T) string {
+func (c Curl) dryRun(event models.EventParsed, templateSystem *ts.T) string {
 	out, _ := c.interpretEvent(event, 0, templateSystem)
 
 	btz, _ := json.MarshalIndent(out, "", "  ")

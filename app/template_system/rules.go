@@ -1,4 +1,4 @@
-package template_system
+package ts
 
 type Field string
 type TemplateTag string

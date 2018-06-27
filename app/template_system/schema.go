@@ -1,4 +1,4 @@
-package template_system
+package ts
 
 var Schema map[string][]string = map[string][]string{
 	OnAction:      {DoActionPickTemplate},
