@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"database/sql"
-	"eduroam-notifier/app/template_system"
+	ts "eduroam-notifier/app/template_system"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -230,9 +230,9 @@ Z poważaniem,
 			Created: timeZero,
 		},
 		{
-			On:      "action",
-			Do:      "send_template",
-			Value:   "{\"action\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"send_template\" : \"wrong_password\"}",
+			On:      ts.OnAction,
+			Do:      ts.DoActionPickTemplate,
+			Value:   fmt.Sprintf("{\"%s\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"%s\" : \"wrong_password\"}", ts.OnAction, ts.DoActionPickTemplate),
 			Created: timeZero,
 		},
 	}
@@ -300,7 +300,7 @@ func initializeGlobalVariables() {
 		revel.AppLog.Critf("Failed settings unmarshalling: %s", err.Error())
 	}
 
-	globalTemplate, err = template_system.New(settingsParsed, rules, templates)
+	globalTemplate, err = ts.New(settingsParsed, rules, templates)
 	if err != nil {
 		revel.AppLog.Critf("Failed initialization of templates: %s", err.Error())
 	}

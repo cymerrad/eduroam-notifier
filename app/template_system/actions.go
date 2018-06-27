@@ -7,5 +7,5 @@ const (
 )
 
 const (
-	DoActionSendTemplate = "send_template"
+	DoActionPickTemplate = "pick_template"
 )
