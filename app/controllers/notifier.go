@@ -3,7 +3,7 @@ package controllers
 import (
 	"crypto/sha256"
 	"eduroam-notifier/app/models"
-	"eduroam-notifier/app/template_system"
+	ts "eduroam-notifier/app/template_system"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -156,7 +156,7 @@ func (c Notifier) retrieveSettingsFromDB() (s SettingsData, err error) {
 		templatesParsed[ind] = BodyParsed{raw.ID, raw.Name, string(raw.Body)}
 	}
 
-	schemaParsed, _ := json.Marshal(template_system.Schema)
+	schemaParsed, _ := json.Marshal(ts.Schema)
 	settingsParsed, _ := settings.Unmarshall()
 
 	return SettingsData{
@@ -178,7 +178,7 @@ func (c Notifier) retrieveSettingsFromSession() (s SettingsData, err error) {
 	}
 
 	cases := c.Params.Values["settings-cases"]
-	rules, err := template_system.ParseRulesFromValues(cases)
+	rules, err := ts.ParseRulesFromValues(cases)
 	if err != nil {
 		return s, err
 	}
@@ -202,7 +202,7 @@ func (c Notifier) retrieveSettingsFromSession() (s SettingsData, err error) {
 		}
 	}
 
-	schemaParsed, _ := json.Marshal(template_system.Schema)
+	schemaParsed, _ := json.Marshal(ts.Schema)
 
 	settings := SettingsData{
 		OtherParsed:  other,
@@ -216,7 +216,7 @@ func (c Notifier) retrieveSettingsFromSession() (s SettingsData, err error) {
 	return settings, err
 }
 
-func (c Notifier) interpretEvent(event models.EventParsed, eventID int, templateSystem *template_system.T) ([]models.MailMessage, error) {
+func (c Notifier) interpretEvent(event models.EventParsed, eventID int, templateSystem *ts.T) ([]models.MailMessage, error) {
 	out := make([]models.MailMessage, 0)
 
 	for _, match := range event.CheckResult.MatchingMessages {
@@ -247,7 +247,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		emailAddr, err := getUserEmailAddress(&match.Fields)
 		if err != nil {
 			c.Log.Errorf("getUserEmailAddress: %s", err.Error())
-			extras["CANCEL_LINK"] = "(could not be generated, sorry)"
+			extras[ts.CANCEL_LINK] = "(could not be generated, sorry)"
 		} else {
 			hash := fmt.Sprintf("%x", sha256.Sum256([]byte(emailAddr)))
 			urlPath, err := revel.ReverseURL("Notifier.Cancel", hash)
@@ -256,9 +256,9 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 
 			if err != nil {
 				c.Log.Errorf("Generating link: %s", err.Error())
-				extras["CANCEL_LINK"] = "(could not be generated, sorry)"
+				extras[ts.CANCEL_LINK] = "(could not be generated, sorry)"
 			} else {
-				extras["CANCEL_LINK"] = clickyLink
+				extras[ts.CANCEL_LINK] = clickyLink
 			}
 		}
 
@@ -266,21 +266,21 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
 		} else {
-			extras["COUNT_MAC"] = strconv.FormatInt(countMsgs, 10)
+			extras[ts.COUNT_MAC] = strconv.FormatInt(countMsgs, 10)
 		}
 
 		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByPesel(msg))
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
 		} else {
-			extras["COUNT_PESEL"] = strconv.FormatInt(countMsgs, 10)
+			extras[ts.COUNT_PESEL] = strconv.FormatInt(countMsgs, 10)
 		}
 
 		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByUsername(msg))
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
 		} else {
-			extras["COUNT_USERNAME"] = strconv.FormatInt(countMsgs, 10)
+			extras[ts.COUNT_USERNAME] = strconv.FormatInt(countMsgs, 10)
 		}
 
 		result := interpretMessage(match.Fields, extras, eventID, templateSystem)
@@ -294,7 +294,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 	return out, nil
 }
 
-func interpretMessage(fields models.EventMessageFields, extras map[string]string, eventID int, a *template_system.T) (resp models.MailMessage) {
+func interpretMessage(fields models.EventMessageFields, extras map[string]string, eventID int, a *ts.T) (resp models.MailMessage) {
 	revel.AppLog.Debugf("Doing something magical with %#v", fields)
 
 	stampTheMessage(&resp, &fields, eventID)
