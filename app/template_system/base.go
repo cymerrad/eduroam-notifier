@@ -17,6 +17,7 @@ type T struct {
 	Actions          map[Action]TemplateID
 	ReplaceWithField map[TemplateTag]Field
 	ReplaceWithConst map[TemplateTag]ConstValue
+	IgnoreFirst      map[Action]int
 }
 
 type TemplateID string
@@ -30,13 +31,13 @@ func New(other models.NotifierSettingsParsed, rules []models.NotifierRule, templ
 		return nil, err
 	}
 
-	a, f, c, err := ParseRules(rules)
+	a, f, c, i, err := ParseRules(rules)
 	if err != nil {
 		return nil, err
 	}
 
 	t := T{
-		ts, a, f, c,
+		ts, a, f, c, i,
 	}
 
 	return &t, nil
@@ -62,18 +63,26 @@ func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*te
 	return out, err
 }
 
-func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF map[TemplateTag]Field, outC map[TemplateTag]ConstValue, err error) {
+var DeclaredValueMismatch = errors.New("declared/value mismatch")
+
+func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF map[TemplateTag]Field, outC map[TemplateTag]ConstValue, outI map[Action]int, err error) {
 	outA = make(map[Action]TemplateID)
 	outF = make(map[TemplateTag]Field)
 	outC = make(map[TemplateTag]ConstValue)
+	outI = make(map[Action]int)
+
+	var ifNotOkBail = func(isIt bool) {
+		if !isIt {
+			err = DeclaredValueMismatch
+			goto dupa
+		}
+	}
 
 	for _, rl := range rules {
 		values := Values{}
-		err := json.NewDecoder(strings.NewReader(rl.Value)).Decode(&values)
-		// TODO: do something on all the errors below
+		err = json.NewDecoder(strings.NewReader(rl.Value)).Decode(&values)
 		if err != nil {
-			// error parsing
-			continue
+			return
 		}
 
 		switch rl.On {
@@ -81,9 +90,14 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 			switch rl.Do {
 			case DoActionPickTemplate:
 				// TODO what if these are empty? Do some error handling finally
-				action := values[OnAction]
+				action, ok := values[OnAction]
 				templateID := values[DoActionPickTemplate]
 				outA[Action(action)] = TemplateID(templateID)
+
+			case DoIgnoreFirstN:
+				action := values[OnAction]
+				ignoreValue := values[DoIgnoreFirstN]
+				outI[Action(action)] = 0
 
 			default:
 				// unrecognized
@@ -112,6 +126,7 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 		}
 	}
 
+dupa:
 	return
 }
 
@@ -157,6 +172,19 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 		out[ind] = *rule
 	}
 	return out, nil
+}
+
+//Preflight says how many first occurences to ignore and if there are any critical errors with the event.
+func (t *T) Preflight(fieldsStruct models.EventMessageFields) (int, error) {
+	action := Action(fieldsStruct.Action)
+
+	tmplID, ok := t.Actions[action]
+	if !ok {
+		return 0, errors.New("no such action " + fieldsStruct.Action)
+	}
+
+	ignoreFirst := t.IgnoreFirst[action]
+	return ignoreFirst, nil
 }
 
 func (t *T) Input(fieldsStruct models.EventMessageFields, extras map[string]string) (string, error) {
