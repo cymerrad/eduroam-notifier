@@ -21,7 +21,7 @@ type CurlData struct {
 
 type SettingsData struct {
 	Templates    []BodyParsed
-	TemplatesRaw []models.NotifierTemplate
+	TemplatesRaw []models.NotifierTemplate `json:"-"`
 	Rules        []models.NotifierRule
 	OtherParsed  models.NotifierSettingsParsed
 	Other        string

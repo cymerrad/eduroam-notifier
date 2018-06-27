@@ -164,6 +164,7 @@ func defineMailMessageTable(dbm *gorp.DbMap) {
 	// set "id" as primary key and autoincrement
 	t := dbm.AddTable(models.MailMessage{}).SetKeys(true, "ID")
 	t.ColMap("Created").Transient = true
+	t.ColMap("BodyString").Transient = true
 }
 
 func defineOptOutTable(dbm *gorp.DbMap) {
