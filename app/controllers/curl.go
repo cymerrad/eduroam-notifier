@@ -104,7 +104,7 @@ func (c Curl) Notify() revel.Result {
 }
 
 func (c Curl) dryRun(event models.EventParsed, templateSystem *template_system.T) string {
-	out, _ := c.interpretEvent(event, templateSystem)
+	out, _ := c.interpretEvent(event, 0, templateSystem)
 
 	btz, _ := json.MarshalIndent(out, "", "  ")
 

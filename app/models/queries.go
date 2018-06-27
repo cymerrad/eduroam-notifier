@@ -41,4 +41,9 @@ var (
 		sql, _, _ := partialGetCountFromMessage().Where("Username = '?'", msg.Username).ToSql()
 		return sql
 	}
+
+	GetOptOutsOfUser = func(msg Message) string {
+		sql, _, _ := partialGetAll().From("OptOut").Where("Username = '?'", msg.Username).ToSql()
+		return sql
+	}
 )

@@ -52,7 +52,7 @@ func (c Notifier) Notify() revel.Result {
 
 		c.Log.Debugf("Success inserting message %v", msg)
 
-		interpretMessage(match.Fields, nil, globalTemplate)
+		interpretMessage(match.Fields, nil, event.ID, globalTemplate)
 
 	}
 
@@ -65,79 +65,74 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 	return eventP, err
 }
 
-// send mail
-type ResponseAction struct {
-	Recipient string `json:"recipient"`
-	Body      string `json:"body"`
-	Error     string `json:"error,omitempty"`
-}
-
-func (c App) interpretEvent(event models.EventParsed, templateSystem *template_system.T) ([]models.MailMessage, error) {
-	out := make([]models.MailMessage, 0)
-
-	for _, match := range event.CheckResult.MatchingMessages {
-		extras := make(map[string]string)
-		msg := match.ToMessage(0)
-
-		// PRE-RENDER CHECKS
-
-		// CONSTANTS FOR TEMPLATING
-		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
-		if err != nil {
-			c.Log.Errorf("Executing counting query: %s", err.Error())
-		} else {
-			extras["COUNT_MAC"] = strconv.FormatInt(countMsgs, 10)
-		}
-
-		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByPesel(msg))
-		if err != nil {
-			c.Log.Errorf("Executing counting query: %s", err.Error())
-		} else {
-			extras["COUNT_PESEL"] = strconv.FormatInt(countMsgs, 10)
-		}
-
-		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByUsername(msg))
-		if err != nil {
-			c.Log.Errorf("Executing counting query: %s", err.Error())
-		} else {
-			extras["COUNT_USERNAME"] = strconv.FormatInt(countMsgs, 10)
-		}
-
-		result := interpretMessage(match.Fields, extras, templateSystem)
-		out = append(out, result)
-	}
-
-	return out, nil
-}
-
-func interpretMessage(fields models.EventMessageFields, extras map[string]string, a *template_system.T) (resp models.MailMessage) {
-	revel.AppLog.Debugf("Doing something magical with %#v", fields)
-
-	output, err := a.Input(fields, extras)
+func (c Notifier) Settings() revel.Result {
+	s, err := c.retrieveSettingsFromSession()
 	if err != nil {
-		resp.Error = err.Error()
-		resp.Recipient = "none (do nothing)"
-		return
+		c.Validation.Error("Corrupted form %s", err.Error())
+	} else {
+		err2 := c.saveSettings(s)
+		if err != nil {
+			c.Validation.Error("Saving settings failed %s", err2.Error())
+		}
 	}
-	resp.Body = output
-
-	recipient, err := determineRecipient(fields)
-	if err != nil {
-		resp.Error = err.Error()
-		resp.Recipient = "(cannot be found)"
+	if res, ok := c.HasErrorsRedirect(Curl.Index); ok {
+		return res
 	}
-	resp.Recipient = recipient
 
-	return
+	c.Log.Debugf("Form: %v", c.Params.Values)
+
+	redirectTo := c.Params.Get("redirect")
+	if redirectTo == "curl" {
+		return c.Redirect(Curl.Index)
+	}
+
+	return c.Redirect(App.Index)
 }
 
-// TODO
-// this might seriously change (e.g. calls to some other service)
-func determineRecipient(fields models.EventMessageFields) (string, error) {
-	if fields.SourceUser == "" {
-		return "", errors.New("empty SourceUser field")
+func (c Notifier) HasErrorsRedirect(val interface{}) (res revel.Result, ok bool) {
+	if c.Validation.HasErrors() {
+		// Store the validation errors in the flash context and redirect.
+		c.Validation.Keep()
+		c.FlashParams()
+		return c.Redirect(Curl.Index), true
 	}
-	return fields.SourceUser, nil
+	return revel.ErrorResult{}, false
+}
+
+func (c Notifier) saveSettings(s SettingsData) error {
+	now := time.Now()
+
+	btz, _ := s.OtherParsed.Marshall()
+	settings := &models.NotifierSettings{
+		Created: now,
+		JSON:    btz,
+	}
+
+	errors := make([]error, 0)
+
+	// copy, update created time and insert
+	for _, el := range s.Rules {
+		temp := models.NotifierRule(el)
+		temp.Created = now
+		errors = append(errors, c.Txn.Insert(&temp))
+	}
+	for _, el := range s.TemplatesRaw {
+		temp := models.NotifierTemplate(el)
+		temp.Created = now
+		errors = append(errors, c.Txn.Insert(&temp))
+	}
+	errors = append(errors, c.Txn.Insert(settings))
+
+	// TODO one error to rule them all?
+	func(errs ...error) {
+		for _, e := range errs {
+			if e != nil {
+				c.Log.Errorf("Error adding new settings: %s", e.Error())
+			}
+		}
+	}(errors...)
+
+	return nil
 }
 
 func (c Notifier) retrieveSettingsFromDB() (s SettingsData, err error) {
@@ -219,72 +214,95 @@ func (c Notifier) retrieveSettingsFromSession() (s SettingsData, err error) {
 	return settings, err
 }
 
-func (c Notifier) HasErrorsRedirect(val interface{}) (res revel.Result, ok bool) {
-	if c.Validation.HasErrors() {
-		// Store the validation errors in the flash context and redirect.
-		c.Validation.Keep()
-		c.FlashParams()
-		return c.Redirect(Curl.Index), true
-	}
-	return revel.ErrorResult{}, false
-}
+func (c App) interpretEvent(event models.EventParsed, eventID int, templateSystem *template_system.T) ([]models.MailMessage, error) {
+	out := make([]models.MailMessage, 0)
 
-func (c Notifier) Settings() revel.Result {
-	s, err := c.retrieveSettingsFromSession()
-	if err != nil {
-		c.Validation.Error("Corrupted form %s", err.Error())
-	} else {
-		err2 := c.saveSettings(s)
+	for _, match := range event.CheckResult.MatchingMessages {
+		extras := make(map[string]string)
+		msg := match.ToMessage(0)
+
+		// PRE-RENDER CHECKS
+		optOuts, err := c.Txn.Select(models.OptOut{}, models.GetOptOutsOfUser(msg))
 		if err != nil {
-			c.Validation.Error("Saving settings failed %s", err2.Error())
+			c.Log.Errorf("Opt-out finding failed. Refusing to take action.")
+			return nil, err
+		}
+		if len(optOuts) > 0 {
+			c.Log.Debugf("Opt-out: %#v", optOuts)
+			mailMsg := models.MailMessage{}
+			stampTheMessage(&mailMsg, &match.Fields, eventID)
+			mailMsg.Error = "User opted-out from notifications."
+			out = append(out, mailMsg)
+
+			if err := c.Txn.Insert(&msg); err != nil {
+				c.Log.Errorf("Saving the message: %s", err.Error())
+			}
+
+			return out, nil
+		}
+
+		// CONSTANTS FOR TEMPLATING
+		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		if err != nil {
+			c.Log.Errorf("Executing counting query: %s", err.Error())
+		} else {
+			extras["COUNT_MAC"] = strconv.FormatInt(countMsgs, 10)
+		}
+
+		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByPesel(msg))
+		if err != nil {
+			c.Log.Errorf("Executing counting query: %s", err.Error())
+		} else {
+			extras["COUNT_PESEL"] = strconv.FormatInt(countMsgs, 10)
+		}
+
+		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByUsername(msg))
+		if err != nil {
+			c.Log.Errorf("Executing counting query: %s", err.Error())
+		} else {
+			extras["COUNT_USERNAME"] = strconv.FormatInt(countMsgs, 10)
+		}
+
+		result := interpretMessage(match.Fields, extras, eventID, templateSystem)
+		out = append(out, result)
+
+		if err := c.Txn.Insert(&result); err != nil {
+			c.Log.Errorf("Saving the message: %s", err.Error())
 		}
 	}
-	if res, ok := c.HasErrorsRedirect(Curl.Index); ok {
-		return res
-	}
 
-	c.Log.Debugf("Form: %v", c.Params.Values)
-
-	redirectTo := c.Params.Get("redirect")
-	if redirectTo == "curl" {
-		return c.Redirect(Curl.Index)
-	}
-
-	return c.Redirect(App.Index)
+	return out, nil
 }
 
-func (c Notifier) saveSettings(s SettingsData) error {
-	now := time.Now()
+func interpretMessage(fields models.EventMessageFields, extras map[string]string, eventID int, a *template_system.T) (resp models.MailMessage) {
+	revel.AppLog.Debugf("Doing something magical with %#v", fields)
 
-	btz, _ := s.OtherParsed.Marshall()
-	settings := &models.NotifierSettings{
-		Created: now,
-		JSON:    btz,
+	stampTheMessage(&resp, &fields, eventID)
+
+	output, err := a.Input(fields, extras)
+	if err != nil {
+		resp.Error += err.Error()
+	} else {
+		resp.Body = output
 	}
 
-	errors := make([]error, 0)
+	return
+}
 
-	// copy, update created time and insert
-	for _, el := range s.Rules {
-		temp := models.NotifierRule(el)
-		temp.Created = now
-		errors = append(errors, c.Txn.Insert(&temp))
+// TODO
+// this might seriously change (e.g. make calls to some other service)
+func stampTheMessage(msg *models.MailMessage, fields *models.EventMessageFields, eventID int) {
+	var recipient string
+	var err string
+
+	if fields.SourceUser == "" {
+		recipient, err = "(cannot be found)", "empty SourceUser field"
+	} else {
+		recipient, err = fields.SourceUser, ""
 	}
-	for _, el := range s.TemplatesRaw {
-		temp := models.NotifierTemplate(el)
-		temp.Created = now
-		errors = append(errors, c.Txn.Insert(&temp))
-	}
-	errors = append(errors, c.Txn.Insert(settings))
 
-	// TODO one error to rule them all?
-	func(errs ...error) {
-		for _, e := range errs {
-			if e != nil {
-				c.Log.Errorf("Error adding new settings: %s", e.Error())
-			}
-		}
-	}(errors...)
-
-	return nil
+	msg.Recipient = recipient
+	msg.Error = err
+	msg.Created = time.Now()
+	msg.EventID = eventID
 }
