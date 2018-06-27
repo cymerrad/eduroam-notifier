@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"crypto/sha256"
 	"eduroam-notifier/app/models"
 	"eduroam-notifier/app/template_system"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -214,7 +216,7 @@ func (c Notifier) retrieveSettingsFromSession() (s SettingsData, err error) {
 	return settings, err
 }
 
-func (c App) interpretEvent(event models.EventParsed, eventID int, templateSystem *template_system.T) ([]models.MailMessage, error) {
+func (c Notifier) interpretEvent(event models.EventParsed, eventID int, templateSystem *template_system.T) ([]models.MailMessage, error) {
 	out := make([]models.MailMessage, 0)
 
 	for _, match := range event.CheckResult.MatchingMessages {
@@ -242,6 +244,21 @@ func (c App) interpretEvent(event models.EventParsed, eventID int, templateSyste
 		}
 
 		// CONSTANTS FOR TEMPLATING
+		emailAddr, err := getUserEmailAddress(&match.Fields)
+		if err != nil {
+			c.Log.Errorf("getUserEmailAddress: %s", err.Error())
+			extras["CANCEL_LINK"] = "(could not be generated, sorry)"
+		} else {
+			hash := fmt.Sprintf("%x", sha256.Sum256([]byte(emailAddr)))
+			urlTempl, err := revel.ReverseURL(Notifier.Cancel, hash)
+			if err != nil {
+				c.Log.Errorf("Generating link: %s", err.Error())
+				extras["CANCEL_LINK"] = "(could not be generated, sorry)"
+			} else {
+				extras["CANCEL_LINK"] = string(urlTempl)
+			}
+		}
+
 		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
@@ -290,19 +307,32 @@ func interpretMessage(fields models.EventMessageFields, extras map[string]string
 }
 
 // TODO
-// this might seriously change (e.g. make calls to some other service)
-func stampTheMessage(msg *models.MailMessage, fields *models.EventMessageFields, eventID int) {
-	var recipient string
-	var err string
-
+// this will seriously change (e.g. make calls to some other service)
+func getUserEmailAddress(fields *models.EventMessageFields) (recipient string, err error) {
 	if fields.SourceUser == "" {
-		recipient, err = "(cannot be found)", "empty SourceUser field"
+		recipient, err = "(cannot be found)", errors.New("empty SourceUser field")
 	} else {
-		recipient, err = fields.SourceUser, ""
+		recipient, err = fields.SourceUser, nil
+	}
+	return
+}
+
+func stampTheMessage(msg *models.MailMessage, fields *models.EventMessageFields, eventID int) {
+	recipient, err := getUserEmailAddress(fields)
+	if err != nil {
+		msg.Error = err.Error()
 	}
 
 	msg.Recipient = recipient
-	msg.Error = err
 	msg.Created = time.Now()
 	msg.EventID = eventID
+}
+
+func (c Notifier) Cancel(id string) revel.Result {
+
+	// TODO
+	// opt-out by id
+	c.Log.Errorf("Requested cancellation of %s", id)
+
+	return c.RenderText("k")
 }
