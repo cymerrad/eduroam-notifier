@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"eduroam-notifier/app/models"
 	"eduroam-notifier/app/routes"
+	"eduroam-notifier/app/template_system"
 
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
@@ -15,6 +16,8 @@ type App struct {
 	GorpController
 }
 
+var globalTemplate *template_system.T
+
 func (c App) Index() revel.Result {
 	if c.connected() != nil {
 		return c.Redirect(routes.App.Console())
@@ -23,7 +26,7 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) Console() revel.Result {
-	c.ViewArgs["settings"] = settings
+	// c.ViewArgs["settings"] = settings
 
 	return c.Render()
 }

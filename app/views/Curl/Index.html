@@ -2,6 +2,10 @@
 {{template "header.html" .}}
 
 
+<form method="POST" class="form" action="{{url "Curl.Notify"}}" id="json-form">
+
+{{template "settings.html" .}}
+
 <div class="container">
     <div class="row">
         <div class="span6">
@@ -9,20 +13,25 @@
         </div>
     </div>
     <h2>Send a JSON like a Graylog would:</h2>
-    <form method="POST" class="form" action="{{url "Curl.Notify"}}" id="json-form">
-        <div class="form-group">
-            <label for="json">JSON:</label>
-            <textarea name="json" class="form-control" rows="10" id="json"></textarea>
-
-            <button type="submit" class="btn btn-lg btn-default">Submit</button>
-        </div> 
-    </form>
+    <div class="form-group">
+        <label for="json">JSON Object</label>
+        <textarea name="json" class="form-control" rows="10" id="json"></textarea>
+    </div> 
 </div>
 
+<div class="container">
+    <button type="submit" class="btn btn-lg btn-primary" id="submit-button">Submit</button>
+</div>
+</form>
 
 <div class="container">
     <h2>The example event will have the following effect:</h2>
     {{if .curl}}
+    <label for="parsed-output">Expected results</label>
+    <ul class="list-group" id="parsed-output">
+    </ul>
+
+    <label for="json-output">Raw JSON output</label>
     <pre id="json-output"></pre>
     {{else}}
     <p>Send a request first!</p>
@@ -30,15 +39,25 @@
 </div>
 
 <script>
-    $('#json-form').submit(function(event){
-        if ( !validate( $('#json').val() ) ) {
-            event.preventDefault();
+    var SUBMIT_BUTTON = $('#submit-button');
+    var FORM = $('#json-form');
 
-            var errAlert = $('#json-error'); 
-            errAlert.show();
-            errAlert.text("Invalid JSON");
-            setTimeout(function(){errAlert.hide();}, 3000)
+    SUBMIT_BUTTON.click(function(event){
+        event.preventDefault();
+        if ( validate( $('#json').val() ) ) {
+            // this should be defined in 'settings.html' template
+            transferVisibleToHiddenForm();
+
+            // if ok then submit the form
+            FORM.submit();
+            return
         }
+
+        // invalid
+        var errAlert = $('#json-error'); 
+        errAlert.show();
+        errAlert.text("Invalid JSON");
+        setTimeout(function(){errAlert.hide();}, 3000)
     });
 
     function validate(text) {
@@ -52,10 +71,37 @@
     };
 </script>
 
-{{if .curl}}
+{{if .curl.Input}}
 <script>
     $('#json').val("{{.curl.Input}}");
+</script>
+{{end}}
+
+{{if .curl.Output}}
+<script>
     $('#json-output').text("{{.curl.Output}}");
+    var OUTPUT = JSON.parse("{{.curl.Output}}")
+    var PARSED_OUTS = $('#parsed-output')
+    // TODO
+
+    OUTPUT.forEach(element => {
+        PARSED_OUTS.append(generateOutputMessage(element.recipient, element.body));
+    });
+
+    function generateOutputMessage(recipient, body) {
+        return createElement(
+            "li",
+            { class: "list-group-item" },
+            createElement("div", { class: "form-group" }, 
+                createElement("label", null, "Recipient"),
+                createElement("p", null, recipient),
+            ),
+            createElement("div", { class: "form-group" }, 
+                createElement("label", null, "Body"),
+                createElement("pre", null, body),
+            ),
+        );
+    }
 </script>
 {{end}}
 

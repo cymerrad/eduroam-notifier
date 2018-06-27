@@ -8,7 +8,7 @@ import (
 )
 
 type Message struct {
-	ID        string
+	ID        int // non-PK?
 	EventID   int
 	Message   string
 	Timestamp time.Time

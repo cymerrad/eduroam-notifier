@@ -2,10 +2,14 @@ package controllers
 
 import (
 	"database/sql"
+	"eduroam-notifier/app/template_system"
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/go-gorp/gorp"
+	gorp "gopkg.in/gorp.v2"
+
 	"golang.org/x/crypto/bcrypt"
 
 	// comment justifing import
@@ -19,6 +23,8 @@ import (
 func init() {
 	revel.OnAppStart(InitDb)
 	revel.OnAppStart(createTestUsers, 5)
+	revel.OnAppStart(createTestSettings, 6)
+	revel.OnAppStart(initializeGlobalVariables, 7)
 
 	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
@@ -54,7 +60,7 @@ func getConnectionString() string {
 	port := getParamString("db.port", "3306")
 	user := getParamString("db.user", "")
 	pass := getParamString("db.password", "")
-	dbname := getParamString("db.name", "auction")
+	dbname := getParamString("db.name", "eduroam")
 	protocol := getParamString("db.protocol", "tcp")
 	dbargs := getParamString("dbargs", " ")
 
@@ -97,6 +103,8 @@ var InitDb = func() {
 	defineUserTable(Dbm)
 	defineMessageTable(Dbm)
 	defineNotifierTables(Dbm)
+	defineMailMessageTable(Dbm)
+	defineOptOutTable(Dbm)
 
 	if err := Dbm.CreateTablesIfNotExists(); err != nil {
 		revel.AppLog.Fatalf("Creating tables: %s", err.Error())
@@ -115,7 +123,7 @@ func defineMessageTable(dbm *gorp.DbMap) {
 	conditionalDropTable(dbm, "Message")
 
 	// set "id" as primary key and autoincrement
-	_ = dbm.AddTable(models.Message{}).SetKeys(false, "ID")
+	_ = dbm.AddTable(models.Message{}).SetKeys(true, "ID")
 }
 
 func defineUserTable(dbm *gorp.DbMap) {
@@ -126,7 +134,7 @@ func defineUserTable(dbm *gorp.DbMap) {
 			t.ColMap(col).MaxSize = size
 		}
 	}
-	t := dbm.AddTable(models.User{}).SetKeys(true, "UserId")
+	t := dbm.AddTable(models.User{}).SetKeys(true, "ID")
 	t.ColMap("Password").Transient = true
 	setColumnSizes(t, map[string]int{
 		"Username": 20,
@@ -136,12 +144,33 @@ func defineUserTable(dbm *gorp.DbMap) {
 
 func defineNotifierTables(dbm *gorp.DbMap) {
 	conditionalDropTable(dbm, "NotifierRule")
+	conditionalDropTable(dbm, "NotifierTemplate")
 	conditionalDropTable(dbm, "NotifierSettings")
 
 	t1 := dbm.AddTable(models.NotifierRule{}).SetKeys(true, "ID")
-	t := dbm.AddTable(models.NotifierSettings{})
+	t1.ColMap("Created").Transient = true
+	t2 := dbm.AddTable(models.NotifierTemplate{}).SetKeys(true, "ID")
+	t2.ColMap("Created").Transient = true
+	t := dbm.AddTable(models.NotifierSettings{}).SetKeys(true, "ID")
+	t.ColMap("Created").Transient = true
 
 	t, t1 = t1, t // so the compiler won't complain
+	t, t2 = t2, t
+}
+
+func defineMailMessageTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "MailMessage")
+
+	// set "id" as primary key and autoincrement
+	t := dbm.AddTable(models.MailMessage{}).SetKeys(true, "ID")
+	t.ColMap("BodyString").Transient = true
+}
+
+func defineOptOutTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "OptOut")
+
+	// set "id" as primary key and autoincrement
+	_ = dbm.AddTable(models.OptOut{}).SetKeys(true, "ID")
 }
 
 func createTestUsers() {
@@ -159,4 +188,122 @@ func createTestUsers() {
 		return
 	}
 	revel.AppLog.Info("User 'demo' already exists.")
+}
+
+func createTestSettings() {
+	var exampleSetting = models.NotifierSettingsParsed{
+		Cooldown: int64(7 * 24 * time.Hour),
+	}
+	var timeZero = time.Unix(0, 0)
+
+	// TODO
+	// Move  this into app.conf
+
+	const exTemp = `Witam.
+Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{COUNT_MAC}}.
+Jeżeli nie chcesz otrzymywać więcej takich maili, kliknij w {{CANCEL_LINK}}.
+
+Z poważaniem,
+{{signature}}`
+	exampleTemplate := models.NotifierTemplate{
+		Name:    "wrong_password",
+		Body:    []byte(exTemp),
+		Created: timeZero,
+	}
+	exampleRules := []models.NotifierRule{
+		{
+			On:      "template_tag",
+			Do:      "insert_text",
+			Value:   "{\"template_tag\" : \"signature\", \"insert_text\" : \"DSK UW\"}",
+			Created: timeZero,
+		},
+		{
+			On:      "template_tag",
+			Do:      "substitute_with_field",
+			Value:   "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
+			Created: timeZero,
+		},
+		{
+			On:      "template_tag",
+			Do:      "substitute_with_field",
+			Value:   "{\"template_tag\" : \"pesel\", \"substitute_with_field\" : \"Pesel\"}",
+			Created: timeZero,
+		},
+		{
+			On:      "action",
+			Do:      "send_template",
+			Value:   "{\"action\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"send_template\" : \"wrong_password\"}",
+			Created: timeZero,
+		},
+	}
+
+	// insert if not existent... or not... it depends
+	btz, _ := json.MarshalIndent(exampleSetting, "", "  ")
+	demoSettings := &models.NotifierSettings{
+		JSON:    btz,
+		Created: timeZero,
+	}
+	tSet := &models.NotifierSettings{}
+	res, err := Dbm.Select(tSet, models.GetNotifierSettings)
+	if err != nil || len(res) == 0 {
+		err := Dbm.Insert(demoSettings)
+		if err != nil {
+			revel.AppLog.Errorf("Inserting settings: %s", err.Error())
+		}
+		revel.AppLog.Info("Created example settings.")
+	}
+
+	tTemp := &models.NotifierTemplate{}
+	res, err = Dbm.Select(tTemp, models.GetAllNotifierTemplates)
+	if err != nil || len(res) == 0 {
+		if err := Dbm.Insert(&exampleTemplate); err != nil {
+			revel.AppLog.Errorf("Inserting template: %s", err.Error())
+		}
+		revel.AppLog.Info("Created example template.")
+	}
+
+	tRule := &models.NotifierRule{}
+	res, err = Dbm.Select(tRule, models.GetAllNotifierRules)
+	if err != nil || len(res) == 0 {
+		for _, rule := range exampleRules {
+			err := Dbm.Insert(&rule)
+			if err != nil {
+				revel.AppLog.Errorf("Inserting rule %s: %s", rule.Value, err.Error())
+			}
+		}
+
+		revel.AppLog.Infof("Created %d rules", len(exampleRules))
+	}
+
+}
+
+func initializeGlobalVariables() {
+	var chillax = func(res []interface{}, err error) {
+		if err != nil {
+			revel.AppLog.Errorf("Failed initialization: %s", err.Error())
+		}
+	}
+	var templates []models.NotifierTemplate
+	var rules []models.NotifierRule
+	var settings models.NotifierSettings
+	var err error
+
+	chillax(Dbm.Select(&templates, models.GetAllNotifierTemplates))
+	chillax(Dbm.Select(&rules, models.GetAllNotifierRules))
+	err = Dbm.SelectOne(&settings, models.GetNotifierSettings)
+	if err != nil {
+		revel.AppLog.Errorf("Failed initialization: %s", err.Error())
+	}
+
+	settingsParsed, err := settings.Unmarshall()
+	if err != nil {
+		revel.AppLog.Critf("Failed settings unmarshalling: %s", err.Error())
+	}
+
+	globalTemplate, err = template_system.New(settingsParsed, rules, templates)
+	if err != nil {
+		revel.AppLog.Critf("Failed initialization of templates: %s", err.Error())
+	}
+
+	revel.AppLog.Debugf("Templating system: \n %s", globalTemplate.Show())
 }

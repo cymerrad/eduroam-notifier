@@ -1,0 +1,356 @@
+<div class="container">
+    {{if .settings}}
+
+    <h2>Settings:</h2>
+    <div class="container" style="margin-bottom: 20px">
+        <button type="button" class="btn btn-lg btn-primary" id="save-settings" >Save current settings</button>
+        <a class="btn btn-lg btn-danger" id="reload-settings" href="{{url "Curl.Index"}}">Reload saved settings</a>
+        {{if .curl}}
+        <input hidden class="hidden" name="redirect" value="curl">
+        {{end}}
+    </div>
+
+    <div class="container">
+    <label for="templates">Templates</label>
+    <ul class="list-group" id="templates">
+    
+        {{if .settings.Templates}}
+            {{range .settings.Templates}}
+        <li class="list-group-item"  id="template-{{.Name}}">
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                        <label for="templateText-{{.Name}}" class="template-id">{{.Name}}</label>
+                        <button type="button" class="btn btn-xs btn-danger" onclick="deleteTemplate('{{.Name}}')"><span class="glyphicon glyphicon-trash"></span></button>
+                </div>
+                <textarea name="template-{{.Name}}" class="form-control" rows="10" id="templateText-{{.Name}}"></textarea>
+            </div> 
+
+            <script>
+                $('#templateText-{{.Name}}').val("{{.Body}}");
+            </script>  
+        </li>
+            {{end}}
+        {{end}}
+        <li class="list-group-item" id="templates-new-button">
+            <div style="display: flex; flex-direction: row-reverse;">
+                <button type="button" class="btn btn-lg btn-success" id="new-template-button">New template</button>
+                <input type="text" class="form-control" style="max-width: 200px" id="new-template-name" placeholder="New template name">
+            </div>
+        </li>
+    </ul>
+
+    <div class="row">
+        <div class="span6">
+            <div class="alert alert-danger" hidden id="template-error"></div>
+        </div>
+    </div>
+    
+    </div>
+
+
+    <div class="hidden" id="settings-templates"></div>
+    
+        {{if .settings.Rules}}
+    <div class="container">
+    <div class="form-group">
+    <label for="cases">On/Do cases:</label>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th width="20%">On</th>
+                <th width="20%">Do</th>
+                <th width="50%">Value</th>
+                <th width="5%">Tag</th>
+                <th width="5%"></th>
+            </tr>
+        </thead>
+        <tbody id="cases">
+            {{range .settings.Rules }}
+            <tr id="rule{{.ID}}">
+                <td>{{.On}}</td>
+                <td>{{.Do}}</td>
+                <td class="settings-value">{{.Value}}</td>
+                <td>{{.ID}}</td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-danger btn-xs" onclick="deleteRule('rule{{.ID}}')">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </button>
+                </td>
+            </tr>
+            {{end}}
+            <tr id="adding-rule">
+                <td>
+                    <select class="form-control" id="on-field"></select>
+                </td>
+                <td>
+                    <select class="form-control" id="do-field"></select>
+                </td>
+                <td>
+                    <textarea class="form-control" rows="2" style="resize: vertical; min-height: 33px;" id="value-field"></textarea>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-success btn-md" id="adding-rule-submit">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="row">
+        <div class="span6">
+            <div class="alert alert-danger" hidden id="rules-error"></div>
+        </div>
+    </div>
+
+    </div>
+        {{end}}
+
+    <div class="container">
+    <div class="form-group">
+    <label for="other">Other:</label>
+    <textarea name="other" class="form-control" rows="10" id="other"></textarea>
+    <script>
+        $('#other').val("{{.settings.Other}}");
+    </script>  
+    </div>
+    </div>
+
+    <div class="hidden" id="settings-cases"></div>
+
+        {{if .settings.Schema}}
+
+    <script>
+        var SCHEMA = JSON.parse("{{.settings.Schema}}");
+        var ONF = $('#on-field');
+        var DOF = $('#do-field');
+        var VALF = $('#value-field');
+        var CASES = $('#cases');
+        var TEMPLATES = $('#templates');
+        
+        var addRuleButton = $('#adding-rule-submit');
+        var newTemplateButton = $('#new-template-button');
+        var saveSettingsButton = $('#save-settings');
+
+        saveSettingsButton.click(function(event){
+            transferVisibleToHiddenForm();
+
+            // we are contained inside a form named "json-form"
+            var FORM = $('#json-form');
+            // we will just change it's destination
+            FORM.attr('action', '{{url "Notifier.Settings"}}');
+            FORM.submit();
+            return
+            
+        });
+
+        function transferVisibleToHiddenForm() {
+            var VISIBLE_VALUES = $('.settings-value'); // refind
+            var HIDDEN_CASES = $('#settings-cases');
+            HIDDEN_CASES.empty();
+            $.each(VISIBLE_VALUES, (ind, elem)=>{
+                newoption = document.createElement("input");
+                newoption.value = `${elem.innerText}`;
+                newoption.name = "settings-cases";
+                HIDDEN_CASES.append(newoption);
+            });
+        }
+
+        // add empty option
+        newoption = document.createElement("option");
+        ONF.append(newoption);
+
+        Object.keys(SCHEMA).forEach(key =>{
+            newoption = document.createElement("option");
+            newoption.text = `${key}`;
+            ONF.append(newoption);
+        });
+        ONF.change((event)=>{
+            key = ONF.val();
+            DOF.empty();
+
+            // add empty option
+            newoption = document.createElement("option");
+            DOF.append(newoption);
+
+            if (key == "") {
+                return
+            }
+
+            SCHEMA[key].forEach((opt) => {
+                newoption = document.createElement("option");
+                newoption.text = `${opt}`;
+                DOF.append(newoption);
+            });
+        });
+        DOF.change((event)=>{
+            first = ONF.val();
+            second = DOF.val();
+            if (first && second) {
+                VALF.empty();
+                VALF.val(`{"${first}" : "${first.toUpperCase()}",\n  "${second}" : "${second.toUpperCase()}"}`)
+            }
+        });
+
+        var ruleno = 0;
+        addRuleButton.click(() => {
+            [value_f, on_f, do_f] = [$('#value-field'), $('#on-field'), $('#do-field')];
+            value = value_f.val();
+            on_ = on_f.val();
+            do_ = do_f.val();
+            if (value && on_  && do_) {
+                newRow = generateRule("test" + (++ruleno), on_, do_, value);
+                lastChild = CASES.children('#adding-rule');
+                lastChild.detach();
+                CASES.append(newRow);
+                CASES.append(lastChild);
+            } else {
+                var errAlert = $('#rules-error'); 
+                errAlert.show();
+                errAlert.text("None of the fields can be empty.");
+                setTimeout(function(){errAlert.hide();}, 3000);
+            }
+        });
+
+        function createElement(tag, props, ...children) {
+            newEl = document.createElement(tag);
+            if (props != null) {
+                if (props.hasOwnProperty("class")) {
+                    newEl.setAttribute('class', props.class)
+                }
+                if (props.hasOwnProperty("id")) {
+                    newEl.setAttribute('id', props.id)
+                }
+                if (props.hasOwnProperty("type")) {
+                    newEl.setAttribute('type', props.type)
+                }
+                if (props.hasOwnProperty("onclick")) {
+                    newEl.setAttribute('onclick', props.onclick)
+                }
+                if (props.hasOwnProperty("style")) {
+                    newEl.setAttribute('style', props.style)
+                }
+                if (props.hasOwnProperty("name")) {
+                    newEl.setAttribute('name', props.name)
+                }
+                if (props.hasOwnProperty("rows")) {
+                    newEl.setAttribute('rows', props.rows)
+                }
+            }
+            for (i=0; i<children.length; i++) {
+                newEl.append(children[i]);
+            }
+            return newEl;
+        }
+
+        function generateRule(id_, on_, do_, val_) {
+            id_prop = "rule" + id_;
+            return createElement(
+                "tr",
+                { id: id_prop },
+                createElement("td", null, "" + on_),
+                createElement("td", null, "" + do_),
+                createElement("td", { class: "settings-value" }, "" + val_),
+                createElement("td", null, "" + id_),
+                createElement(
+                "td",
+                null,
+                createElement(
+                    "button",
+                    {
+                    type: "button",
+                    class: "btn btn-primary btn-danger btn-xs",
+                    onclick: `deleteRule('${id_prop}')`
+                    },
+                    createElement("span", { class: "glyphicon glyphicon-trash" })
+                )
+                )
+            );
+        }
+
+        function deleteRule(id_) {
+            $(`#${id_}`).remove();
+        }
+
+        function templateNameValid(newName) {
+            const validName = /^(\w)+$/;
+            return newName.match(validName) !== null;
+        }
+
+        newTemplateButton.click(() => {
+            var newName = $('#new-template-name').val();
+
+            if (templateNameValid(newName)) {
+                newTemplate = generateTemplate(newName);
+                lastChild = TEMPLATES.children('#templates-new-button');
+                lastChild.detach();
+                TEMPLATES.append(newTemplate);
+                TEMPLATES.append(lastChild);
+
+                return
+            }
+
+            var errAlert = $('#template-error'); 
+            errAlert.show();
+            errAlert.text("Invalid template name.");
+            setTimeout(function(){errAlert.hide();}, 3000)
+        });
+
+        function generateTemplate(name) {
+            id_prop = `template-${name}`;
+            id_prop_textarea = `templateText-${name}`;
+            return createElement(
+                "li",
+                { 
+                    class: "list-group-item",
+                    id: id_prop,
+                },
+                createElement(
+                "div",
+                { class: "form-group" },
+                createElement("div", {
+                    style: "display: flex; justify-content: space-between;",
+                }, 
+                    createElement("label", {
+                        for: id_prop_textarea,
+                        class: "template-id",
+                    }, `${name}`),
+                    createElement(
+                    "button",
+                    {
+                    type: "button",
+                    class: "btn btn-primary btn-danger btn-xs",
+                    onclick: `deleteTemplate('${name}')`
+                    },
+                    createElement("span", { class: "glyphicon glyphicon-trash" })
+                    )
+                ),
+                createElement("textarea", {
+                    name: id_prop,
+                    class: "form-control",
+                    rows: "10",
+                    id: id_prop_textarea,
+                })
+                )
+            );
+        }
+
+        function deleteTemplate(name) {
+            $(`#template-${name}`).remove();
+        }
+
+
+    </script>
+        {{end}}
+
+    {{else}}
+    <div class="row">
+        <div class="span6">
+            <div class="alert alert-danger" id="settings-error">
+                Some error occurred.
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>

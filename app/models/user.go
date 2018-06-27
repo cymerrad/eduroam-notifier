@@ -2,12 +2,13 @@ package models
 
 import (
 	"fmt"
-	"github.com/revel/revel"
 	"regexp"
+
+	"github.com/revel/revel"
 )
 
 type User struct {
-	UserId             int
+	ID                 int
 	Name               string
 	Username, Password string
 	HashedPassword     []byte
