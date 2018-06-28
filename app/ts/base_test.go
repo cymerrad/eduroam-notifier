@@ -19,7 +19,7 @@ func TestParseRules(t *testing.T) {
 		wantOutI map[Action]int
 		wantErr  bool
 	}{
-		{"test", args{GoodStartingSettings},
+		{"test", args{StartingRules},
 			map[Action]TemplateID{"Login incorrect (mschap: MS-CHAP2-Response is incorrect)": "wrong_password"},
 			map[TemplateTag]Field{"mac": "source-mac", "pesel": "Pesel"},
 			map[TemplateTag]ConstValue{"signature": "DSK UW"},
