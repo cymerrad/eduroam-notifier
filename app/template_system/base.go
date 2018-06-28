@@ -5,7 +5,9 @@ import (
 	"eduroam-notifier/app/models"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -63,7 +65,10 @@ func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*te
 	return out, err
 }
 
-var DeclaredValueMismatch = errors.New("declared/value mismatch")
+var (
+	DeclaredValueMismatch = errors.New("declared/value mismatch")
+	UnrecognizedOption    = func(in string) error { return errors.New(fmt.Sprintf("unrecognized option: %s", in)) }
+)
 
 func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF map[TemplateTag]Field, outC map[TemplateTag]ConstValue, outI map[Action]int, err error) {
 	outA = make(map[Action]TemplateID)
@@ -71,18 +76,20 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 	outC = make(map[TemplateTag]ConstValue)
 	outI = make(map[Action]int)
 
+	var STOP = false
+
 	var ifNotOkBail = func(isIt bool) {
 		if !isIt {
 			err = DeclaredValueMismatch
-			goto dupa
+			STOP = true
 		}
 	}
 
-	for _, rl := range rules {
+	var extract = func(rl models.NotifierRule) error {
 		values := Values{}
-		err = json.NewDecoder(strings.NewReader(rl.Value)).Decode(&values)
+		err := json.NewDecoder(strings.NewReader(rl.Value)).Decode(&values)
 		if err != nil {
-			return
+			return err
 		}
 
 		switch rl.On {
@@ -91,42 +98,66 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 			case DoActionPickTemplate:
 				// TODO what if these are empty? Do some error handling finally
 				action, ok := values[OnAction]
-				templateID := values[DoActionPickTemplate]
+				ifNotOkBail(ok)
+				templateID, ok := values[DoActionPickTemplate]
+				ifNotOkBail(ok)
 				outA[Action(action)] = TemplateID(templateID)
 
 			case DoIgnoreFirstN:
-				action := values[OnAction]
-				ignoreValue := values[DoIgnoreFirstN]
-				outI[Action(action)] = 0
+				action, ok := values[OnAction]
+				ifNotOkBail(ok)
+				ignoreValue, ok := values[DoIgnoreFirstN]
+				ifNotOkBail(ok)
+				parsed, err := strconv.Atoi(ignoreValue)
+				if err != nil {
+					return err
+				}
+				outI[Action(action)] = parsed
 
 			default:
 				// unrecognized
-				continue
+				return UnrecognizedOption(rl.Do)
 			}
-			continue
+
 		case OnTemplateTag:
 			switch rl.Do {
 			case DoInsertText:
-				tag := TemplateTag(values[OnTemplateTag])
-				constValue := ConstValue(values[DoInsertText])
-				outC[tag] = constValue
+				tag, ok := values[OnTemplateTag]
+				ifNotOkBail(ok)
+				constValue, ok := values[DoInsertText]
+				ifNotOkBail(ok)
+				outC[TemplateTag(tag)] = ConstValue(constValue)
 
 			case DoSubstituteWithField:
-				tag := TemplateTag(values[OnTemplateTag])
-				field := Field(values[DoSubstituteWithField])
-				outF[tag] = field
+				tag, ok := values[OnTemplateTag]
+				ifNotOkBail(ok)
+				field, ok := values[DoSubstituteWithField]
+				ifNotOkBail(ok)
+				outF[TemplateTag(tag)] = Field(field)
 
 			default:
 				// unrecognized
-				continue
+				return UnrecognizedOption(rl.Do)
 			}
 		default:
 			// unrecognized option
-			continue
+			return UnrecognizedOption(rl.On)
+		}
+
+		return nil
+	}
+
+	for _, rl := range rules {
+		err2 := extract(rl)
+		if STOP {
+			return
+		}
+		if err2 != nil {
+			err = err2
+			return
 		}
 	}
 
-dupa:
 	return
 }
 
