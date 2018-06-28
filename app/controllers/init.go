@@ -210,32 +210,7 @@ Z poważaniem,
 		Body:    []byte(exTemp),
 		Created: timeZero,
 	}
-	exampleRules := []models.NotifierRule{
-		{
-			On:      ts.OnTemplateTag,
-			Do:      ts.DoInsertText,
-			Value:   ts.GenerateJSON(ts.OnTemplateTag, "signature", ts.DoInsertText, "DSK UW"),
-			Created: timeZero,
-		},
-		{
-			On:      ts.OnTemplateTag,
-			Do:      ts.DoSubstituteWithField,
-			Value:   ts.GenerateJSON(ts.OnTemplateTag, "mac", ts.DoSubstituteWithField, "source-mac"),
-			Created: timeZero,
-		},
-		{
-			On:      ts.OnTemplateTag,
-			Do:      ts.DoSubstituteWithField,
-			Value:   ts.GenerateJSON(ts.OnTemplateTag, "pesel", ts.DoSubstituteWithField, "Pesel"),
-			Created: timeZero,
-		},
-		{
-			On:      ts.OnAction,
-			Do:      ts.DoActionPickTemplate,
-			Value:   ts.GenerateJSON(ts.OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", ts.DoActionPickTemplate, "wrong_password"),
-			Created: timeZero,
-		},
-	}
+	exampleRules := ts.GoodStartingSettings
 
 	// insert if not existent... or not... it depends
 	btz, _ := json.MarshalIndent(exampleSetting, "", "  ")

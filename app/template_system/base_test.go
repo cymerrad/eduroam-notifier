@@ -7,7 +7,39 @@ import (
 	"time"
 )
 
-var timeZero = time.Unix(0, 0)
+var TimeZero = time.Unix(0, 0)
+var GoodStartingSettings = []models.NotifierRule{
+	{
+		On:      OnTemplateTag,
+		Do:      DoInsertText,
+		Value:   GenerateJSON(OnTemplateTag, "signature", DoInsertText, "DSK UW"),
+		Created: TimeZero,
+	},
+	{
+		On:      OnTemplateTag,
+		Do:      DoSubstituteWithField,
+		Value:   GenerateJSON(OnTemplateTag, "mac", DoSubstituteWithField, "source-mac"),
+		Created: TimeZero,
+	},
+	{
+		On:      OnTemplateTag,
+		Do:      DoSubstituteWithField,
+		Value:   GenerateJSON(OnTemplateTag, "pesel", DoSubstituteWithField, "Pesel"),
+		Created: TimeZero,
+	},
+	{
+		On:      OnAction,
+		Do:      DoActionPickTemplate,
+		Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoActionPickTemplate, "wrong_password"),
+		Created: TimeZero,
+	},
+	{
+		On:      OnAction,
+		Do:      DoIgnoreFirstN,
+		Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoIgnoreFirstN, "5"),
+		Created: TimeZero,
+	},
+}
 
 func TestParseRules(t *testing.T) {
 	type args struct {
@@ -22,36 +54,11 @@ func TestParseRules(t *testing.T) {
 		wantOutI map[Action]int
 		wantErr  bool
 	}{
-		{"test", args{[]models.NotifierRule{
-			{
-				On:      OnTemplateTag,
-				Do:      DoInsertText,
-				Value:   GenerateJSON(OnTemplateTag, "signature", DoInsertText, "DSK UW"),
-				Created: timeZero,
-			},
-			{
-				On:      OnTemplateTag,
-				Do:      DoSubstituteWithField,
-				Value:   GenerateJSON(OnTemplateTag, "mac", DoSubstituteWithField, "source-mac"),
-				Created: timeZero,
-			},
-			{
-				On:      OnTemplateTag,
-				Do:      DoSubstituteWithField,
-				Value:   GenerateJSON(OnTemplateTag, "pesel", DoSubstituteWithField, "Pesel"),
-				Created: timeZero,
-			},
-			{
-				On:      OnAction,
-				Do:      DoActionPickTemplate,
-				Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoActionPickTemplate, "wrong_password"),
-				Created: timeZero,
-			},
-		}},
+		{"test", args{GoodStartingSettings},
 			map[Action]TemplateID{"Login incorrect (mschap: MS-CHAP2-Response is incorrect)": "wrong_password"},
 			map[TemplateTag]Field{"mac": "source-mac", "pesel": "Pesel"},
 			map[TemplateTag]ConstValue{"signature": "DSK UW"},
-			map[Action]int{},
+			map[Action]int{"Login incorrect (mschap: MS-CHAP2-Response is incorrect)": 5},
 			false},
 	}
 	for _, tt := range tests {
