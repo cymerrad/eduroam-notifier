@@ -2,7 +2,6 @@ package ts
 
 import (
 	"eduroam-notifier/app/models"
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -25,33 +24,33 @@ func TestParseRules(t *testing.T) {
 	}{
 		{"test", args{[]models.NotifierRule{
 			{
-				On:      "template_tag",
-				Do:      "insert_text",
-				Value:   "{\"template_tag\" : \"signature\", \"insert_text\" : \"DSK UW\"}",
+				On:      OnTemplateTag,
+				Do:      DoInsertText,
+				Value:   GenerateJSON(OnTemplateTag, "signature", DoInsertText, "DSK UW"),
 				Created: timeZero,
 			},
 			{
-				On:      "template_tag",
-				Do:      "substitute_with_field",
-				Value:   "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
+				On:      OnTemplateTag,
+				Do:      DoSubstituteWithField,
+				Value:   GenerateJSON(OnTemplateTag, "mac", DoSubstituteWithField, "source-mac"),
 				Created: timeZero,
 			},
 			{
-				On:      "template_tag",
-				Do:      "substitute_with_field",
-				Value:   "{\"template_tag\" : \"pesel\", \"substitute_with_field\" : \"Pesel\"}",
+				On:      OnTemplateTag,
+				Do:      DoSubstituteWithField,
+				Value:   GenerateJSON(OnTemplateTag, "pesel", DoSubstituteWithField, "Pesel"),
 				Created: timeZero,
 			},
 			{
 				On:      OnAction,
 				Do:      DoActionPickTemplate,
-				Value:   fmt.Sprintf("{\"%s\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"%s\" : \"wrong_password\"}", OnAction, DoActionPickTemplate),
+				Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoActionPickTemplate, "wrong_password"),
 				Created: timeZero,
 			},
 		}},
-			map[Action]TemplateID{},
-			map[TemplateTag]Field{},
-			map[TemplateTag]ConstValue{},
+			map[Action]TemplateID{"Login incorrect (mschap: MS-CHAP2-Response is incorrect)": "wrong_password"},
+			map[TemplateTag]Field{"mac": "source-mac", "pesel": "Pesel"},
+			map[TemplateTag]ConstValue{"signature": "DSK UW"},
 			map[Action]int{},
 			false},
 	}

@@ -209,7 +209,7 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 func (t *T) Preflight(fieldsStruct models.EventMessageFields) (int, error) {
 	action := Action(fieldsStruct.Action)
 
-	tmplID, ok := t.Actions[action]
+	_, ok := t.Actions[action]
 	if !ok {
 		return 0, errors.New("no such action " + fieldsStruct.Action)
 	}

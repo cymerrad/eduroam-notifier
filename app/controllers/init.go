@@ -212,27 +212,27 @@ Z poważaniem,
 	}
 	exampleRules := []models.NotifierRule{
 		{
-			On:      "template_tag",
-			Do:      "insert_text",
-			Value:   "{\"template_tag\" : \"signature\", \"insert_text\" : \"DSK UW\"}",
+			On:      ts.OnTemplateTag,
+			Do:      ts.DoInsertText,
+			Value:   ts.GenerateJSON(ts.OnTemplateTag, "signature", ts.DoInsertText, "DSK UW"),
 			Created: timeZero,
 		},
 		{
-			On:      "template_tag",
-			Do:      "substitute_with_field",
-			Value:   "{\"template_tag\" : \"mac\", \"substitute_with_field\" : \"source-mac\"}",
+			On:      ts.OnTemplateTag,
+			Do:      ts.DoSubstituteWithField,
+			Value:   ts.GenerateJSON(ts.OnTemplateTag, "mac", ts.DoSubstituteWithField, "source-mac"),
 			Created: timeZero,
 		},
 		{
-			On:      "template_tag",
-			Do:      "substitute_with_field",
-			Value:   "{\"template_tag\" : \"pesel\", \"substitute_with_field\" : \"Pesel\"}",
+			On:      ts.OnTemplateTag,
+			Do:      ts.DoSubstituteWithField,
+			Value:   ts.GenerateJSON(ts.OnTemplateTag, "pesel", ts.DoSubstituteWithField, "Pesel"),
 			Created: timeZero,
 		},
 		{
 			On:      ts.OnAction,
 			Do:      ts.DoActionPickTemplate,
-			Value:   fmt.Sprintf("{\"%s\" : \"Login incorrect (mschap: MS-CHAP2-Response is incorrect)\", \"%s\" : \"wrong_password\"}", ts.OnAction, ts.DoActionPickTemplate),
+			Value:   ts.GenerateJSON(ts.OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", ts.DoActionPickTemplate, "wrong_password"),
 			Created: timeZero,
 		},
 	}
