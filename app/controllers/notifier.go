@@ -39,26 +39,14 @@ func (c Notifier) Notify() revel.Result {
 		return c.RenderText(":c")
 	}
 
-	for _, match := range parsedEvent.CheckResult.MatchingMessages {
-		msg := match.ToMessage(event.ID)
-
-		// store the match in database for further decisions
-		if err := c.Txn.Insert(&msg); err != nil {
-			c.Log.Errorf("Error inserting event into DB: %s", err.Error())
-			continue
-		}
-
-		// TODO
-		// at this point perform check if spamming the user is necessary
-		// because we still have access to database at this point
-
-		c.Log.Debugf("Success inserting message %v", msg)
-
-		interpretMessage(match.Fields, nil, event.ID, globalTemplate)
-
+	msgs, err := c.interpretEvent(parsedEvent, event.ID, globalTemplate)
+	if err != nil {
+		c.Log.Errorf("Interpreting: %s", err.Error())
+	} else {
+		c.Log.Debugf("Result %v", msgs)
 	}
 
-	return c.RenderText("k")
+	return c.RenderJSON(msgs)
 }
 
 func (c Notifier) parseEvent() (models.EventParsed, error) {
@@ -223,6 +211,10 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		extras := make(map[string]string)
 		msg := match.ToMessage(0)
 
+		if err := c.Txn.Insert(&msg); err != nil {
+			c.Log.Errorf("Saving the EVENT message: %s", err.Error())
+		}
+
 		// PRE-RENDER CHECKS
 		optOuts, err := c.Txn.Select(models.OptOut{}, models.GetOptOutsOfUser(msg))
 		if err != nil {
@@ -236,8 +228,8 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			mailMsg.Error = "User opted-out from notifications."
 			out = append(out, mailMsg)
 
-			if err := c.Txn.Insert(&msg); err != nil {
-				c.Log.Errorf("Saving the message: %s", err.Error())
+			if err := c.Txn.Insert(&mailMsg); err != nil {
+				c.Log.Errorf("Saving the MAIL message: %s", err.Error())
 			}
 
 			return out, nil
@@ -251,8 +243,8 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			mailMsg.Error = fmt.Sprintf("Preflight error on action '%s'.", match.Fields.Action)
 			out = append(out, mailMsg)
 
-			if err := c.Txn.Insert(&msg); err != nil {
-				c.Log.Errorf("Saving the message: %s", err.Error())
+			if err := c.Txn.Insert(&mailMsg); err != nil {
+				c.Log.Errorf("Saving the MAIL message: %s", err.Error())
 			}
 
 			return out, nil
@@ -312,7 +304,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		out = append(out, result)
 
 		if err := c.Txn.Insert(&result); err != nil {
-			c.Log.Errorf("Saving the message: %s", err.Error())
+			c.Log.Errorf("Saving the MAIL message: %s", err.Error())
 		}
 	}
 
