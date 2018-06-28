@@ -83,6 +83,7 @@ func (c Curl) Notify() revel.Result {
 		return res
 	}
 
+	// <override>
 	settings.Rules = append(settings.Rules, models.NotifierRule{
 		On:    ts.OnAction,
 		Do:    ts.DoIgnoreFirstN,
@@ -93,6 +94,9 @@ func (c Curl) Notify() revel.Result {
 	if err != nil {
 		c.Validation.Error("Error occurred: %s", err.Error())
 	}
+
+	// </override>
+	settings.Rules = settings.Rules[:len(settings.Rules)-1]
 
 	c.ViewArgs["curl"] = CurlData{
 		Input:  string(prettiedUpInput),
