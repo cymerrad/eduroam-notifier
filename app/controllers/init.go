@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	gorp "gopkg.in/gorp.v2"
 
@@ -191,32 +190,15 @@ func createTestUsers() {
 }
 
 func createTestSettings() {
-	var exampleSetting = models.NotifierSettingsParsed{
-		Cooldown: int64(7 * 24 * time.Hour),
-	}
-	var timeZero = time.Unix(0, 0)
-
-	// TODO
-	// Move  this into tests
-
-	const exTemp = `Witam.
-Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{COUNT_MAC}}.
-Jeżeli nie chcesz otrzymywać więcej takich maili, kliknij w {{CANCEL_LINK}}.
-
-Z poważaniem,
-{{signature}}`
-	exampleTemplate := models.NotifierTemplate{
-		Name:    "wrong_password",
-		Body:    []byte(exTemp),
-		Created: timeZero,
-	}
-	exampleRules := ts.GoodStartingSettings
+	exampleSetting := ts.StartingSettings
+	exampleTemplate := ts.StartingTemplate
+	exampleRules := ts.StartingRules
 
 	// insert if not existent... or not... it depends
 	btz, _ := json.MarshalIndent(exampleSetting, "", "  ")
 	demoSettings := &models.NotifierSettings{
 		JSON:    btz,
-		Created: timeZero,
+		Created: ts.TimeZero,
 	}
 	tSet := &models.NotifierSettings{}
 	res, err := Dbm.Select(tSet, models.GetNotifierSettings)

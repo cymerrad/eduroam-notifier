@@ -6,7 +6,7 @@ import (
 )
 
 var TimeZero = time.Unix(0, 0)
-var GoodStartingSettings = []models.NotifierRule{
+var StartingRules = []models.NotifierRule{
 	{
 		On:      OnTemplateTag,
 		Do:      DoInsertText,
@@ -37,4 +37,21 @@ var GoodStartingSettings = []models.NotifierRule{
 		Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoIgnoreFirstN, "5"),
 		Created: TimeZero,
 	},
+}
+
+const exTemp = `Witam.
+Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{COUNT_MAC}}.
+Jeżeli nie chcesz otrzymywać więcej takich maili, kliknij w {{CANCEL_LINK}}.
+
+Z poważaniem,
+{{signature}}`
+
+var StartingTemplate = models.NotifierTemplate{
+	Name:    "wrong_password",
+	Body:    []byte(exTemp),
+	Created: TimeZero,
+}
+
+var StartingSettings = models.NotifierSettingsParsed{
+	Cooldown: int64(7 * 24 * time.Hour),
 }
