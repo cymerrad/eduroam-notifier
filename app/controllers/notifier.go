@@ -211,9 +211,20 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		extras := make(map[string]string)
 		msg := match.ToMessage(0)
 
-		if err := c.Txn.Insert(&msg); err != nil {
+		// price of using goto
+		var body string
+		var err error
+		var countMsgs int64
+		var emailAddr string
+		var ignoreFirst int
+		var previous int64
+
+		if err = c.Txn.Insert(&msg); err != nil {
 			c.Log.Errorf("Saving the EVENT message: %s", err.Error())
 		}
+
+		mailMsg := models.MailMessage{}
+		stampTheMessage(&mailMsg, &match.Fields, eventID)
 
 		// PRE-RENDER CHECKS
 		optOuts, err := c.Txn.Select(models.OptOut{}, models.GetOptOutsOfUser(msg))
@@ -223,45 +234,32 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		}
 		if len(optOuts) > 0 {
 			c.Log.Debugf("Opt-out: %#v", optOuts)
-			mailMsg := models.MailMessage{}
-			stampTheMessage(&mailMsg, &match.Fields, eventID)
 			mailMsg.Error = "User opted-out from notifications."
-			out = append(out, mailMsg)
 
-			if err := c.Txn.Insert(&mailMsg); err != nil {
-				c.Log.Errorf("Saving the MAIL message: %s", err.Error())
-			}
-
-			return out, nil
+			goto SKIPPING_STUFF
 		}
 
-		ignoreFirst, err := templateSystem.Preflight(match.Fields)
+		ignoreFirst, err = templateSystem.Preflight(match.Fields)
 		if err != nil {
 			c.Log.Errorf("POSSIBLY UNRECOGNIZED ACTION: %#v", match)
-			mailMsg := models.MailMessage{}
-			stampTheMessage(&mailMsg, &match.Fields, eventID)
 			mailMsg.Error = fmt.Sprintf("Preflight error on action '%s'.", match.Fields.Action)
-			out = append(out, mailMsg)
 
-			if err := c.Txn.Insert(&mailMsg); err != nil {
-				c.Log.Errorf("Saving the MAIL message: %s", err.Error())
-			}
-
-			return out, nil
+			goto SKIPPING_STUFF
 		}
 
-		previous, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		previous, err = c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
 		if err != nil {
 			c.Log.Errorf("Counting previous failed.")
 			return nil, err
 		}
 		if previous < int64(ignoreFirst) {
-			c.Log.Debugf("TOO EARLY FOR SPAMMING: prev %d < ignore %d", previous, ignoreFirst)
-			continue
+			mailMsg.Error = fmt.Sprintf("TOO EARLY FOR SPAMMING: prev %d < ignore %d", previous, ignoreFirst)
+
+			goto SKIPPING_STUFF
 		}
 
 		// CONSTANTS FOR TEMPLATING
-		emailAddr, err := getUserEmailAddress(&match.Fields)
+		emailAddr, err = getUserEmailAddress(&match.Fields)
 		if err != nil {
 			c.Log.Errorf("getUserEmailAddress: %s", err.Error())
 			extras[ts.CANCEL_LINK] = "(could not be generated, sorry)"
@@ -279,7 +277,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			}
 		}
 
-		countMsgs, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
 		} else {
@@ -300,10 +298,21 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			extras[ts.COUNT_USERNAME] = strconv.FormatInt(countMsgs, 10)
 		}
 
-		result := interpretMessage(match.Fields, extras, eventID, templateSystem)
-		out = append(out, result)
+		// FINALLY GET THE CONTENTS OF THE MESSAGE
+		body, err = interpretMessage(match.Fields, extras, eventID, templateSystem)
+		if err != nil {
+			c.Log.Errorf("Generating body: %s", err.Error())
+			mailMsg.Error = err.Error()
+		}
 
-		if err := c.Txn.Insert(&result); err != nil {
+		mailMsg.BodyString = body
+
+		// IF ANYTHING BAD HAPPEND DURING THIS PROCEDURE, WE WILL ARRIVE HERE - SKIPPING GENERATING BODY ET AL.
+	SKIPPING_STUFF:
+
+		out = append(out, mailMsg)
+
+		if err := c.Txn.Insert(&mailMsg); err != nil {
 			c.Log.Errorf("Saving the MAIL message: %s", err.Error())
 		}
 	}
@@ -311,19 +320,8 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 	return out, nil
 }
 
-func interpretMessage(fields models.EventMessageFields, extras map[string]string, eventID int, a *ts.T) (resp models.MailMessage) {
-	revel.AppLog.Debugf("Doing something magical with %#v", fields)
-
-	stampTheMessage(&resp, &fields, eventID)
-
-	output, err := a.Input(fields, extras)
-	if err != nil {
-		resp.Error += err.Error()
-	} else {
-		resp.BodyString = output
-	}
-
-	return
+func interpretMessage(fields models.EventMessageFields, extras map[string]string, eventID int, a *ts.T) (string, error) {
+	return a.Input(fields, extras)
 }
 
 // TODO
