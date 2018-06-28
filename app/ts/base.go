@@ -94,18 +94,16 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 
 		switch rl.On {
 		case OnAction:
+			action, ok := values[OnAction]
+			ifNotOkBail(ok)
+
 			switch rl.Do {
 			case DoActionPickTemplate:
-				// TODO what if these are empty? Do some error handling finally
-				action, ok := values[OnAction]
-				ifNotOkBail(ok)
 				templateID, ok := values[DoActionPickTemplate]
 				ifNotOkBail(ok)
 				outA[Action(action)] = TemplateID(templateID)
 
 			case DoIgnoreFirstN:
-				action, ok := values[OnAction]
-				ifNotOkBail(ok)
 				ignoreValue, ok := values[DoIgnoreFirstN]
 				ifNotOkBail(ok)
 				parsed, err := strconv.Atoi(ignoreValue)
@@ -120,17 +118,16 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 			}
 
 		case OnTemplateTag:
+			tag, ok := values[OnTemplateTag]
+			ifNotOkBail(ok)
+
 			switch rl.Do {
 			case DoInsertText:
-				tag, ok := values[OnTemplateTag]
-				ifNotOkBail(ok)
 				constValue, ok := values[DoInsertText]
 				ifNotOkBail(ok)
 				outC[TemplateTag(tag)] = ConstValue(constValue)
 
 			case DoSubstituteWithField:
-				tag, ok := values[OnTemplateTag]
-				ifNotOkBail(ok)
 				field, ok := values[DoSubstituteWithField]
 				ifNotOkBail(ok)
 				outF[TemplateTag(tag)] = Field(field)

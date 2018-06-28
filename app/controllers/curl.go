@@ -72,8 +72,6 @@ func (c Curl) Notify() revel.Result {
 	event := models.EventParsed{}
 	_ = json.NewDecoder(strings.NewReader(rawJSON)).Decode(&event)
 
-	c.Log.Debugf("Form: %#v", c.Params.Form)
-
 	prettiedUpInput, _ := json.MarshalIndent(input, "", "  ")
 
 	// creating temporary settings for testing purposes
