@@ -66,8 +66,8 @@ func ParseTemplates(templates []models.NotifierTemplate) (out map[TemplateID]*te
 }
 
 var (
-	DeclaredValueMismatch = errors.New("declared/value mismatch")
-	UnrecognizedOption    = func(in string) error { return errors.New(fmt.Sprintf("unrecognized option: %s", in)) }
+	ErrDeclaredValueMismatch = errors.New("declared/value mismatch")
+	ErrUnrecognizedOption    = func(in string) error { return fmt.Errorf("unrecognized option: %s", in) }
 )
 
 func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF map[TemplateTag]Field, outC map[TemplateTag]ConstValue, outI map[Action]int, err error) {
@@ -80,7 +80,7 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 
 	var ifNotOkBail = func(isIt bool) {
 		if !isIt {
-			err = DeclaredValueMismatch
+			err = ErrDeclaredValueMismatch
 			STOP = true
 		}
 	}
@@ -116,7 +116,7 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 
 			default:
 				// unrecognized
-				return UnrecognizedOption(rl.Do)
+				return ErrUnrecognizedOption(rl.Do)
 			}
 
 		case OnTemplateTag:
@@ -137,11 +137,11 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 
 			default:
 				// unrecognized
-				return UnrecognizedOption(rl.Do)
+				return ErrUnrecognizedOption(rl.Do)
 			}
 		default:
 			// unrecognized option
-			return UnrecognizedOption(rl.On)
+			return ErrUnrecognizedOption(rl.On)
 		}
 
 		return nil
@@ -150,11 +150,10 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 	for _, rl := range rules {
 		err2 := extract(rl)
 		if STOP {
-			return
+			return nil, nil, nil, nil, err
 		}
 		if err2 != nil {
-			err = err2
-			return
+			return nil, nil, nil, nil, err2
 		}
 	}
 
