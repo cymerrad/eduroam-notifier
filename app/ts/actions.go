@@ -10,3 +10,7 @@ const (
 	DoActionPickTemplate = "pick_template"
 	DoIgnoreFirstN       = "ignore_first_n"
 )
+
+const (
+	DefaultAction = Action("*")
+)

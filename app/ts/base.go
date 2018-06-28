@@ -201,22 +201,40 @@ func ParseRulesFromValues(rules []string) ([]models.NotifierRule, error) {
 	return out, nil
 }
 
+func (t *T) getTemplateIDOrDefault(in string) (TemplateID, error) {
+	first, ok := t.Actions[Action(in)]
+	if ok {
+		return first, nil
+	}
+	second, ok := t.Actions[DefaultAction]
+	if ok {
+		return second, nil
+	}
+	return "", errors.New("no such action " + in + " and no default set")
+}
+
 //Preflight says how many first occurences to ignore and if there are any critical errors with the event.
 func (t *T) Preflight(fieldsStruct models.EventMessageFields) (int, error) {
-	action := Action(fieldsStruct.Action)
-
-	_, ok := t.Actions[action]
-	if !ok {
-		return 0, errors.New("no such action " + fieldsStruct.Action)
+	_, err := t.getTemplateIDOrDefault(fieldsStruct.Action)
+	if err != nil {
+		return 0, err
 	}
 
-	ignoreFirst := t.IgnoreFirst[action]
+	action := Action(fieldsStruct.Action)
+	ignoreFirst, ok := t.IgnoreFirst[DefaultAction]
+	if !ok {
+		ignoreFirst = t.IgnoreFirst[action]
+	}
 	return ignoreFirst, nil
 }
 
 func (t *T) Input(fieldsStruct models.EventMessageFields, extras map[string]string) (string, error) {
 	// get the template we need
-	tmplID := t.Actions[Action(fieldsStruct.Action)]
+	tmplID, err := t.getTemplateIDOrDefault(fieldsStruct.Action)
+	if err != nil {
+		return "", err
+	}
+
 	tmpl, ok := t.Templates[tmplID]
 	if !ok {
 		return "", errors.New("no such template " + string(tmplID))
@@ -224,7 +242,7 @@ func (t *T) Input(fieldsStruct models.EventMessageFields, extras map[string]stri
 
 	var fieldsMap map[string]string
 	btz, _ := json.Marshal(fieldsStruct)
-	err := json.Unmarshal(btz, &fieldsMap)
+	err = json.Unmarshal(btz, &fieldsMap)
 	if err != nil {
 		revel.AppLog.Errorf("fieldsStruct -> fieldsMap error: %s", err.Error())
 	}

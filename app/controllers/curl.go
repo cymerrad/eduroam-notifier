@@ -83,6 +83,12 @@ func (c Curl) Notify() revel.Result {
 		return res
 	}
 
+	settings.Rules = append(settings.Rules, models.NotifierRule{
+		On:    ts.OnAction,
+		Do:    ts.DoIgnoreFirstN,
+		Value: ts.GenerateJSON(ts.OnAction, "*", ts.DoIgnoreFirstN, "0"),
+	})
+
 	templates, err := ts.New(settings.OtherParsed, settings.Rules, settings.TemplatesRaw)
 	if err != nil {
 		c.Validation.Error("Error occurred: %s", err.Error())
