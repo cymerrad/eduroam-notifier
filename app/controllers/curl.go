@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"eduroam-notifier/app/models"
-	ts "eduroam-notifier/app/template_system"
+	ts "eduroam-notifier/app/ts"
 	"encoding/json"
 	"net/url"
 	"regexp"

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"eduroam-notifier/app/models"
 	"eduroam-notifier/app/routes"
-	ts "eduroam-notifier/app/template_system"
+	ts "eduroam-notifier/app/ts"
 
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"

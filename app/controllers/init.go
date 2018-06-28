@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"database/sql"
-	ts "eduroam-notifier/app/template_system"
+	ts "eduroam-notifier/app/ts"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -197,7 +197,7 @@ func createTestSettings() {
 	var timeZero = time.Unix(0, 0)
 
 	// TODO
-	// Move  this into app.conf
+	// Move  this into tests
 
 	const exTemp = `Witam.
 Użytkowniku o numerze pesel {{pesel}} próbowałeś zalogować się z urządzenia {{mac}}, ale wprowadziłeś złe hasło po raz {{COUNT_MAC}}.

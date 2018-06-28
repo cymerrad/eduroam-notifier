@@ -3,7 +3,7 @@ package controllers
 import (
 	"crypto/sha256"
 	"eduroam-notifier/app/models"
-	ts "eduroam-notifier/app/template_system"
+	ts "eduroam-notifier/app/ts"
 	"encoding/json"
 	"errors"
 	"fmt"
