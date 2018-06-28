@@ -243,6 +243,31 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			return out, nil
 		}
 
+		ignoreFirst, err := templateSystem.Preflight(match.Fields)
+		if err != nil {
+			c.Log.Errorf("POSSIBLY UNRECOGNIZED ACTION: %#v", match)
+			mailMsg := models.MailMessage{}
+			stampTheMessage(&mailMsg, &match.Fields, eventID)
+			mailMsg.Error = fmt.Sprintf("Preflight error on action '%s'.", match.Fields.Action)
+			out = append(out, mailMsg)
+
+			if err := c.Txn.Insert(&msg); err != nil {
+				c.Log.Errorf("Saving the message: %s", err.Error())
+			}
+
+			return out, nil
+		}
+
+		previous, err := c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		if err != nil {
+			c.Log.Errorf("Counting previous failed.")
+			return nil, err
+		}
+		if previous < int64(ignoreFirst) {
+			c.Log.Debugf("TOO EARLY FOR SPAMMING: prev %d < ignore %d", previous, ignoreFirst)
+			continue
+		}
+
 		// CONSTANTS FOR TEMPLATING
 		emailAddr, err := getUserEmailAddress(&match.Fields)
 		if err != nil {
