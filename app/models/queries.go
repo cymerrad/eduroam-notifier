@@ -20,6 +20,7 @@ var (
 	partialGetAll              = func() sq.SelectBuilder { return sq.Select("*") }
 	partialGetCountFromMessage = func() sq.SelectBuilder { return partialGetCount().From("Message") }
 	partialGetAllFromMessage   = func() sq.SelectBuilder { return partialGetAll().From("Message") }
+	partialGetAllOptOuts       = func() sq.SelectBuilder { return mysql.Select("ID, Mac, Pesel, Username, Action, Comment") }
 
 	GetAllMessagesLikeByMac = func(msg Message) string {
 		sql, _, _ := partialGetAllFromMessage().Where(thisLibrarySucks("Mac", msg.Mac)).ToSql()
@@ -47,7 +48,11 @@ var (
 	}
 
 	GetOptOutsOfUser = func(msg Message) string {
-		sql, _, _ := partialGetAll().From("OptOut").Where(thisLibrarySucks("Username", msg.Username)).ToSql()
+		sql, _, _ := partialGetAllOptOuts().From("OptOut").Where(thisLibrarySucks("Pesel", msg.Pesel)).ToSql()
+		return sql
+	}
+	GetLastIncidentByHash = func(hash string) string {
+		sql := fmt.Sprintf("SELECT ID, EventID, Message, Mac, Pesel, Username, Action FROM Message WHERE Pesel IN (SELECT DISTINCT Pesel FROM MailMessage WHERE Hash='%s') ORDER BY -Timestamp LIMIT 1", hash)
 		return sql
 	}
 )

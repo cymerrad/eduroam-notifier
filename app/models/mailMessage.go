@@ -15,6 +15,8 @@ type MailMessage struct {
 	Recipient string    `json:"recipient"`
 	Body      []byte    `json:"-"`
 	Error     string    `json:"error,omitempty"`
+	Pesel     string    `json:"pesel"`
+	Hash      string    `json:"hash"`
 
 	// transient
 	BodyString string `json:"body"`

@@ -221,6 +221,8 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		var emailAddr string
 		var ignoreFirst int
 		var previous int64
+		var otherData OtherUserData
+		// var otherDataMap map[string]string
 
 		if err = c.Txn.Insert(&msg); err != nil {
 			c.Log.Errorf("Saving the EVENT message: %s", err.Error())
@@ -229,10 +231,12 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		mailMsg := models.MailMessage{}
 		stampTheMessage(&mailMsg, &match.Fields, eventID)
 
+		optOuts := make([]models.OptOut, 0)
+
 		// PRE-RENDER CHECKS
-		optOuts, err := c.Txn.Select(models.OptOut{}, models.GetOptOutsOfUser(msg))
+		_, err = c.Txn.Select(&optOuts, models.GetOptOutsOfUser(msg))
 		if err != nil {
-			c.Log.Errorf("Opt-out finding failed. Refusing to take action.")
+			c.Log.Errorf("Opt-out finding failed. Refusing to take action. %s", err.Error())
 			return nil, err
 		}
 		if len(optOuts) > 0 {
@@ -267,7 +271,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			c.Log.Errorf("getUserEmailAddress: %s", err.Error())
 			extras[ts.CANCEL_LINK] = "(could not be generated, sorry)"
 		} else {
-			hash := fmt.Sprintf("%x", sha256.Sum256([]byte(emailAddr)))
+			hash := ConvertEmailAddressToHash(emailAddr)
 			urlPath, err := revel.ReverseURL("Notifier.Cancel", hash)
 			urlFull := fmt.Sprintf("http://%s%s", c.Request.Host, urlPath)
 			clickyLink := fmt.Sprintf("<a href=\"%s\">Click me</a>", urlFull)
@@ -277,6 +281,15 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 				extras[ts.CANCEL_LINK] = "(could not be generated, sorry)"
 			} else {
 				extras[ts.CANCEL_LINK] = clickyLink
+			}
+		}
+		otherData, err = getOtherUserData(&match.Fields)
+		if err != nil {
+			c.Log.Errorf("getOtherUserData: %s", err.Error())
+		} else {
+			otherDataMap := otherData.ToMap()
+			for k, v := range otherDataMap {
+				extras[k] = v
 			}
 		}
 
@@ -341,6 +354,31 @@ func getUserEmailAddress(fields *models.EventMessageFields) (recipient string, e
 	return
 }
 
+var otherUserDataColumns = "imie, imie2, NAZWISKO, PLEC, NAR_KOD"
+
+type OtherUserData struct {
+	Imie     string `json:"FIRST_NAME"`
+	Imie2    string `json:"SECOND_NAME"`
+	Nazwisko string `json:"SURNAME"`
+	Plec     string `json:"SEX"`
+	Nar_Kod  string `json:"NATIONALITY"`
+}
+
+func (o OtherUserData) ToMap() map[string]string {
+	there, _ := json.Marshal(o)
+	andBackAgain := make(map[string]string)
+	_ = json.Unmarshal(there, &andBackAgain)
+	return andBackAgain
+}
+
+func getOtherUserData(fields *models.EventMessageFields) (OtherUserData, error) {
+	var data OtherUserData
+	pesel := fields.Pesel
+
+	err := USOSdbm.SelectOne(&data, "SELECT "+otherUserDataColumns+" FROM DZ_OSOBY WHERE PESEL=?", pesel)
+	return data, err
+}
+
 func stampTheMessage(msg *models.MailMessage, fields *models.EventMessageFields, eventID int) {
 	recipient, err := getUserEmailAddress(fields)
 	if err != nil {
@@ -350,13 +388,45 @@ func stampTheMessage(msg *models.MailMessage, fields *models.EventMessageFields,
 	msg.Recipient = recipient
 	msg.Created = time.Now()
 	msg.EventID = eventID
+	msg.Hash = ConvertEmailAddressToHash(recipient)
+	msg.Pesel = fields.Pesel
 }
 
 func (c Notifier) Cancel(id string) revel.Result {
-
 	// TODO
-	// opt-out by id
-	c.Log.Errorf("Requested cancellation of %s", id)
+	// render pages for passing in the comments
+	c.Log.Debugf("Requested cancellation of %s", id)
+
+	var lastMsg models.Message
+	err := c.Txn.SelectOne(&lastMsg, models.GetLastIncidentByHash(id))
+	if err != nil {
+		c.Log.Errorf("Cancelling with hash: %s", err.Error())
+		return c.RenderText("fial")
+	}
+
+	optOut, _ := CreateOptOutEntry(lastMsg, "This service sucks, that's why.")
+	err = c.Txn.Insert(&optOut)
+	if err != nil {
+		c.Log.Errorf("Cancelling with hash, db query: %s", err.Error())
+		return c.RenderText("fial")
+	}
 
 	return c.RenderText("k")
+}
+
+func ConvertEmailAddressToHash(email string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(email)))
+}
+
+func CreateOptOutEntry(filter models.Message, comment string) (models.OptOut, error) {
+	optOut := models.OptOut{
+		Action:   filter.Action,
+		Comment:  comment,
+		Created:  time.Now(),
+		Mac:      filter.Mac,
+		Pesel:    filter.Pesel,
+		Username: filter.Username,
+	}
+
+	return optOut, nil
 }
