@@ -21,6 +21,7 @@ import (
 
 func init() {
 	revel.OnAppStart(InitDb)
+	revel.OnAppStart(InitUSOSdbm)
 	revel.OnAppStart(createTestUsers, 5)
 	revel.OnAppStart(createTestSettings, 6)
 	revel.OnAppStart(initializeGlobalVariables, 7)
@@ -54,6 +55,17 @@ func getParamBool(param string, defaultValue bool) bool {
 	return p
 }
 
+func createConnectionString(host, port, user, pass, dbname, protocol, dbargs string) string {
+	if strings.Trim(dbargs, " ") != "" {
+		dbargs = "?" + dbargs
+	} else {
+		dbargs = ""
+	}
+
+	return fmt.Sprintf("%s:%s@%s([%s]:%s)/%s%s",
+		user, pass, protocol, host, port, dbname, dbargs)
+}
+
 func getConnectionString() string {
 	host := getParamString("db.host", "")
 	port := getParamString("db.port", "3306")
@@ -63,13 +75,7 @@ func getConnectionString() string {
 	protocol := getParamString("db.protocol", "tcp")
 	dbargs := getParamString("dbargs", " ")
 
-	if strings.Trim(dbargs, " ") != "" {
-		dbargs = "?" + dbargs
-	} else {
-		dbargs = ""
-	}
-	return fmt.Sprintf("%s:%s@%s([%s]:%s)/%s%s",
-		user, pass, protocol, host, port, dbname, dbargs)
+	return createConnectionString(host, port, user, pass, dbname, protocol, dbargs)
 }
 
 var drop bool
@@ -263,4 +269,24 @@ func initializeGlobalVariables() {
 	}
 
 	revel.AppLog.Debugf("Templating system: \n %s", globalTemplate.Show())
+}
+
+var InitUSOSdbm = func() {
+	host := getParamString("usos_db.host", "")
+	port := getParamString("usos_db.port", "3306")
+	user := getParamString("usos_db.user", "")
+	pass := getParamString("usos_db.password", "")
+	dbname := getParamString("usos_db.name", "usosweb_today")
+	protocol := getParamString("usos_db.protocol", "tcp")
+	dbargs := getParamString("dbargs", " ")
+
+	connectionString := createConnectionString(host, port, user, pass, dbname, protocol, dbargs)
+
+	if db, err := sql.Open("mysql", connectionString); err != nil {
+		revel.ERROR.Fatal(err)
+	} else {
+		USOSdbm = &gorp.DbMap{
+			Db:      db,
+			Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+	}
 }

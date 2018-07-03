@@ -13,11 +13,14 @@ import (
 	"time"
 
 	"github.com/revel/revel"
+	gorp "gopkg.in/gorp.v2"
 )
 
 type Notifier struct {
 	App
 }
+
+var USOSdbm *gorp.DbMap
 
 func (c Notifier) Notify() revel.Result {
 	now := time.Now()
@@ -327,10 +330,13 @@ func interpretMessage(fields models.EventMessageFields, extras map[string]string
 // TODO
 // this will seriously change (e.g. make calls to some other service)
 func getUserEmailAddress(fields *models.EventMessageFields) (recipient string, err error) {
-	if fields.SourceUser == "" {
-		recipient, err = "(cannot be found)", errors.New("empty SourceUser field")
+	pesel := fields.Pesel
+	emailAddr := ""
+	err = USOSdbm.SelectOne(&emailAddr, "SELECT EMAIL FROM DZ_OSOBY WHERE PESEL=?", pesel)
+	if err != nil {
+		recipient = "(cannot be found)"
 	} else {
-		recipient, err = fields.SourceUser, nil
+		recipient, err = emailAddr, nil
 	}
 	return
 }
