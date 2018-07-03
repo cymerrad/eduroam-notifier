@@ -80,15 +80,18 @@
 {{if .curl.Output}}
 <script>
     $('#json-output').text("{{.curl.Output}}");
-    var OUTPUT = JSON.parse("{{.curl.Output}}")
-    var PARSED_OUTS = $('#parsed-output')
-    // TODO
+    var OUTPUT = JSON.parse("{{.curl.Output}}");
+    var PARSED_OUTS = $('#parsed-output');
+    const linkedTagRe = /<(\w).*href=\\?"(.*?)\\?".*>(.*)<\/(\w+)>/g;
 
     OUTPUT.forEach(element => {
         PARSED_OUTS.append(generateOutputMessage(element.recipient, element.body));
     });
 
     function generateOutputMessage(recipient, body) {
+        var [whole, tag, href, text] = linkedTagRe.exec(body);
+        var [before, after] = body.split(whole);
+
         return createElement(
             "li",
             { class: "list-group-item" },
@@ -98,7 +101,10 @@
             ),
             createElement("div", { class: "form-group" }, 
                 createElement("label", null, "Body"),
-                createElement("pre", null, body),
+                createElement("div", {
+                    class: "well",
+                    style: "white-space: pre;",
+                }, before, createElement(tag, { href: href}, text), after),
             ),
         );
     }

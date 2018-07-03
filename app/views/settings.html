@@ -237,6 +237,9 @@
                 if (props.hasOwnProperty("rows")) {
                     newEl.setAttribute('rows', props.rows)
                 }
+                if (props.hasOwnProperty("href")) {
+                    newEl.setAttribute('href', props.href)
+                }
             }
             for (i=0; i<children.length; i++) {
                 newEl.append(children[i]);
