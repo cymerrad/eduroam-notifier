@@ -13,6 +13,7 @@ type MailMessage struct {
 	Created   time.Time `json:"-"`
 	EventID   int       `json:"event_id"`
 	Recipient string    `json:"recipient"`
+	Subject   string    `json:"subject"`
 	Body      []byte    `json:"-"`
 	Error     string    `json:"error,omitempty"`
 	Pesel     string    `json:"pesel"`
