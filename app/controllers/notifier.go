@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"crypto/sha256"
+	"eduroam-notifier/app/mailer"
 	"eduroam-notifier/app/models"
 	ts "eduroam-notifier/app/ts"
 	"encoding/json"
@@ -18,9 +19,11 @@ import (
 
 type Notifier struct {
 	App
+	mailer mailer.M
 }
 
 var USOSdbm *gorp.DbMap
+var Mailer *mailer.M
 
 func (c Notifier) Notify() revel.Result {
 	now := time.Now()

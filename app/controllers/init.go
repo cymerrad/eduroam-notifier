@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"eduroam-notifier/app/mailer"
 	ts "eduroam-notifier/app/ts"
 	"encoding/json"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 func init() {
 	revel.OnAppStart(InitDb)
 	revel.OnAppStart(InitUSOSdbm)
+	revel.OnAppStart(InitMailer)
 	revel.OnAppStart(createTestUsers, 5)
 	revel.OnAppStart(createTestSettings, 6)
 	revel.OnAppStart(initializeGlobalVariables, 7)
@@ -289,4 +291,11 @@ var InitUSOSdbm = func() {
 			Db:      db,
 			Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 	}
+}
+
+var InitMailer = func() {
+	serverAddr := getParamString("mailer.server", "localhost")
+	defaultSender := getParamString("mailer.defaultSender", "no-reply@localhost")
+
+	Mailer = mailer.New(serverAddr, defaultSender)
 }
