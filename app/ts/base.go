@@ -256,11 +256,6 @@ func (t *T) Preflight(fieldsStruct models.EventIncidentFields) (int, error) {
 
 //Input takes incident's fields as input and returns message body and a subject
 func (t *T) Input(action string, fieldsMap map[string]string, extras map[string]string) (string, string, error) {
-
-	jeez1, _ := json.MarshalIndent(fieldsMap, "", "  ")
-	jeez2, _ := json.MarshalIndent(extras, "", "  ")
-	fmt.Printf("\n\n\n%s\n\n%s\n\n\n", jeez1, jeez2)
-
 	// get the template we need
 	tmplID, err := t.getTemplateIDOrDefault(action)
 	if err != nil {
