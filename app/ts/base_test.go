@@ -4,6 +4,7 @@ import (
 	"eduroam-notifier/app/models"
 	"reflect"
 	"testing"
+	"text/template"
 )
 
 func TestParseRules(t *testing.T) {
@@ -25,7 +26,7 @@ func TestParseRules(t *testing.T) {
 			map[TemplateTag]Field{"mac": "source-mac", "pesel": "Pesel"},
 			map[TemplateTag]ConstValue{"signature": "DSK UW"},
 			map[Action]int{"Login incorrect (mschap: MS-CHAP2-Response is incorrect)": 5},
-			map[Action]string{},
+			map[Action]string{"Login incorrect (mschap: MS-CHAP2-Response is incorrect)": "Ostrzeżenie Eduroam"},
 			false},
 		{ErrDeclaredValueMismatch.Error(), args{[]models.NotifierRule{
 			{
@@ -90,6 +91,72 @@ func TestParseRules(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotOutS, tt.wantOutS) {
 				t.Errorf("ParseRules() gotOutS = %v, want %v", gotOutS, tt.wantOutS)
+			}
+		})
+	}
+}
+
+func TestT_Input(t *testing.T) {
+	// parsed example rules which should work, 'cause they are tested
+	ts, _ := New(StartingSettings, StartingRules, []models.NotifierTemplate{StartingTemplate})
+
+	type fields struct {
+		Templates        map[TemplateID]*template.Template
+		Actions          map[Action]TemplateID
+		ReplaceWithField map[TemplateTag]Field
+		ReplaceWithConst map[TemplateTag]ConstValue
+		IgnoreFirst      map[Action]int
+		Subjects         map[Action]string
+	}
+	type args struct {
+		action    string
+		fieldsMap map[string]string
+		extras    map[string]string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		want1   string
+		wantErr bool
+	}{
+		{
+			"valid",
+			fields{
+				ts.Templates,
+				ts.Actions,
+				ts.ReplaceWithField,
+				ts.ReplaceWithConst,
+				ts.IgnoreFirst,
+				ts.Subjects,
+			},
+			args{},
+			"",
+			"",
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			watt := &T{
+				Templates:        tt.fields.Templates,
+				Actions:          tt.fields.Actions,
+				ReplaceWithField: tt.fields.ReplaceWithField,
+				ReplaceWithConst: tt.fields.ReplaceWithConst,
+				IgnoreFirst:      tt.fields.IgnoreFirst,
+				Subjects:         tt.fields.Subjects,
+			}
+			got, got1, err := watt.Input(tt.args.action, tt.args.fieldsMap, tt.args.extras)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("T.Input() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("T.Input() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("T.Input() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}

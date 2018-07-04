@@ -91,7 +91,7 @@ type EventMatchingIncident struct {
 type EventIncidentFields struct {
 	Level          int    `json:"-"` // in fact it is a "level"
 	Gl2RemoteIP    string `json:"gl2_remote_ip"`
-	Gl2RemotePort  int    `json:"-"` // and this is "gl2_remote_port", but don't tell anyone that I ignored these fields
+	Gl2RemotePort  int    `json:"-"` // and this is "gl2_remote_port", but they will have to be added manually
 	SourceUser     string `json:"source-user"`
 	Gl2SourceInput string `json:"gl2_source_input"`
 	EDUROAMACT     string `json:"EDUROAM_ACT"`

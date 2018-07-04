@@ -219,6 +219,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 
 		// price of using goto
 		var body string
+		var subject string
 		var err error
 		var countMsgs int64
 		var emailAddr string
@@ -318,13 +319,14 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		}
 
 		// FINALLY GET THE CONTENTS OF THE Incident
-		body, err = interpretIncident(match.Fields, extras, eventID, templateSystem)
+		body, subject, err = interpretIncident(match.Fields, extras, eventID, templateSystem)
 		if err != nil {
 			c.Log.Errorf("Generating body: %s", err.Error())
 			mailMsg.Error = err.Error()
 		}
 
 		mailMsg.BodyString = body
+		mailMsg.Subject = subject
 
 		// IF ANYTHING BAD HAPPEND DURING THIS PROCEDURE, WE WILL ARRIVE HERE - SKIPPING GENERATING BODY ET AL.
 	SKIPPING_STUFF:
@@ -339,8 +341,22 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 	return out, nil
 }
 
-func interpretIncident(fields models.EventIncidentFields, extras map[string]string, eventID int, a *ts.T) (string, error) {
-	return a.Input(fields, extras)
+func interpretIncident(fields models.EventIncidentFields, extras map[string]string, eventID int, a *ts.T) (string, string, error) {
+	var fieldsMap map[string]string
+	btz, _ := json.Marshal(fields)
+	err := json.Unmarshal(btz, &fieldsMap)
+	if err != nil {
+		revel.AppLog.Errorf("fieldsStruct -> fieldsMap error: %s", err.Error())
+		return "", "", err
+	}
+
+	action := fields.Action
+
+	// add some missing fields
+	fieldsMap["gl2_remote_port"] = strconv.Itoa(fields.Gl2RemotePort)
+	fieldsMap["level"] = strconv.Itoa(fields.Level)
+
+	return a.Input(action, fieldsMap, extras)
 }
 
 // TODO

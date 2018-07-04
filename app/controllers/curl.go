@@ -86,8 +86,8 @@ func (c Curl) Notify() revel.Result {
 	// <override>
 	settings.Rules = append(settings.Rules, models.NotifierRule{
 		On:    ts.OnAction,
-		Do:    ts.DoIgnoreFirstN,
-		Value: ts.GenerateJSON(ts.OnAction, "*", ts.DoIgnoreFirstN, "0"),
+		Do:    ts.DoActionIgnoreFirstN,
+		Value: ts.GenerateJSON(ts.OnAction, "*", ts.DoActionIgnoreFirstN, "0"),
 	})
 
 	templates, err := ts.New(settings.OtherParsed, settings.Rules, settings.TemplatesRaw)

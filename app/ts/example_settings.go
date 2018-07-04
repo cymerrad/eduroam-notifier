@@ -37,6 +37,12 @@ var StartingRules = []models.NotifierRule{
 		Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoActionIgnoreFirstN, "5"),
 		Created: TimeZero,
 	},
+	{
+		On:      OnAction,
+		Do:      DoActionEnterSubject,
+		Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoActionEnterSubject, "Ostrzeżenie Eduroam"),
+		Created: TimeZero,
+	},
 }
 
 const exTemp = `Witam.

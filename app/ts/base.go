@@ -122,9 +122,9 @@ func ParseRules(rules []models.NotifierRule) (
 				outI[Action(action)] = parsed
 
 			case DoActionEnterSubject:
-				subjectPattern, ok := values[DoActionEnterSubject]
+				subject, ok := values[DoActionEnterSubject]
 				ifNotOkBail(ok)
-				outS[Action(action)] = subjectPattern
+				outS[Action(action)] = subject
 
 			default:
 				// unrecognized
@@ -224,7 +224,19 @@ func (t *T) getTemplateIDOrDefault(in string) (TemplateID, error) {
 	if ok {
 		return second, nil
 	}
-	return "", errors.New("no such action " + in + " and no default set")
+	return "", errors.New("no template found for action '" + in + "' and no default set")
+}
+
+func (t *T) getSubjectOrDefault(in string) (string, error) {
+	first, ok := t.Subjects[Action(in)]
+	if ok {
+		return first, nil
+	}
+	second, ok := t.Subjects[DefaultAction]
+	if ok {
+		return second, nil
+	}
+	return "", errors.New("no subject found for '" + in + "' and no default set")
 }
 
 //Preflight says how many first occurences to ignore and if there are any critical errors with the event.
@@ -242,23 +254,27 @@ func (t *T) Preflight(fieldsStruct models.EventIncidentFields) (int, error) {
 	return ignoreFirst, nil
 }
 
-func (t *T) Input(fieldsStruct models.EventIncidentFields, extras map[string]string) (string, error) {
+//Input takes incident's fields as input and returns message body and a subject
+func (t *T) Input(action string, fieldsMap map[string]string, extras map[string]string) (string, string, error) {
+
+	jeez1, _ := json.MarshalIndent(fieldsMap, "", "  ")
+	jeez2, _ := json.MarshalIndent(extras, "", "  ")
+	fmt.Printf("\n\n\n%s\n\n%s\n\n\n", jeez1, jeez2)
+
 	// get the template we need
-	tmplID, err := t.getTemplateIDOrDefault(fieldsStruct.Action)
+	tmplID, err := t.getTemplateIDOrDefault(action)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	tmpl, ok := t.Templates[tmplID]
 	if !ok {
-		return "", errors.New("no such template " + string(tmplID))
+		return "", "", errors.New("no such template " + string(tmplID))
 	}
 
-	var fieldsMap map[string]string
-	btz, _ := json.Marshal(fieldsStruct)
-	err = json.Unmarshal(btz, &fieldsMap)
+	subject, err := t.getSubjectOrDefault(action)
 	if err != nil {
-		revel.AppLog.Errorf("fieldsStruct -> fieldsMap error: %s", err.Error())
+		return "", "", err
 	}
 
 	data := make(map[string]string)
@@ -274,8 +290,6 @@ func (t *T) Input(fieldsStruct models.EventIncidentFields, extras map[string]str
 		data[key] = value
 	}
 
-	revel.AppLog.Debugf("fieldsMap %#v", fieldsMap)
-	revel.AppLog.Debugf("fieldsStruct %#v", fieldsStruct)
 	revel.AppLog.Debugf("Data for template: %#v", data)
 
 	// this will be the output
@@ -284,7 +298,7 @@ func (t *T) Input(fieldsStruct models.EventIncidentFields, extras map[string]str
 	// execute template
 	tmpl.Execute(out, data)
 
-	return out.String(), nil
+	return out.String(), subject, nil
 }
 
 func (t *T) Show() string {
