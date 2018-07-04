@@ -108,7 +108,7 @@ var InitDb = func() {
 
 	defineEventTable(Dbm)
 	defineUserTable(Dbm)
-	defineMessageTable(Dbm)
+	defineIncidentTable(Dbm)
 	defineNotifierTables(Dbm)
 	defineMailMessageTable(Dbm)
 	defineOptOutTable(Dbm)
@@ -126,11 +126,11 @@ func defineEventTable(dbm *gorp.DbMap) {
 	t.ColMap("Body").SetNotNull(true)
 }
 
-func defineMessageTable(dbm *gorp.DbMap) {
-	conditionalDropTable(dbm, "Message")
+func defineIncidentTable(dbm *gorp.DbMap) {
+	conditionalDropTable(dbm, "Incident")
 
 	// set "id" as primary key and autoincrement
-	_ = dbm.AddTable(models.Message{}).SetKeys(true, "ID")
+	_ = dbm.AddTable(models.Incident{}).SetKeys(true, "ID")
 }
 
 func defineUserTable(dbm *gorp.DbMap) {

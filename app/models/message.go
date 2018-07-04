@@ -7,7 +7,7 @@ import (
 	"github.com/revel/revel"
 )
 
-type Message struct {
+type Incident struct {
 	ID        int // non-PK?
 	EventID   int
 	Message   string
@@ -20,11 +20,11 @@ type Message struct {
 	Facility  string
 }
 
-func (u *Message) String() string {
-	return fmt.Sprintf("Message(%d, %s)", u.ID, u.Message)
+func (u *Incident) String() string {
+	return fmt.Sprintf("Incident(%d, %s)", u.ID, u.Message)
 }
 
-func (u *Message) Validate(v *revel.Validation) {
+func (u *Incident) Validate(v *revel.Validation) {
 	v.Required(u.Message)
 
 	v.MacAddr(u.Mac)

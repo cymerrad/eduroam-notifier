@@ -16,43 +16,43 @@ var (
 	mysql            = sq.StatementBuilder.PlaceholderFormat(sq.Question)
 	thisLibrarySucks = func(column, value string) string { return fmt.Sprintf("%s = '%s'", column, value) }
 	// I don't like constant strings in code - they are hard to edit later on
-	partialGetCount            = func() sq.SelectBuilder { return mysql.Select("COUNT(*)") }
-	partialGetAll              = func() sq.SelectBuilder { return sq.Select("*") }
-	partialGetCountFromMessage = func() sq.SelectBuilder { return partialGetCount().From("Message") }
-	partialGetAllFromMessage   = func() sq.SelectBuilder { return partialGetAll().From("Message") }
-	partialGetAllOptOuts       = func() sq.SelectBuilder { return mysql.Select("ID, Mac, Pesel, Username, Action, Comment") }
+	partialGetCount             = func() sq.SelectBuilder { return mysql.Select("COUNT(*)") }
+	partialGetAll               = func() sq.SelectBuilder { return sq.Select("*") }
+	partialGetCountFromIncident = func() sq.SelectBuilder { return partialGetCount().From("Incident") }
+	partialGetAllFromIncident   = func() sq.SelectBuilder { return partialGetAll().From("Incident") }
+	partialGetAllOptOuts        = func() sq.SelectBuilder { return mysql.Select("ID, Mac, Pesel, Username, Action, Comment") }
 
-	GetAllMessagesLikeByMac = func(msg Message) string {
-		sql, _, _ := partialGetAllFromMessage().Where(thisLibrarySucks("Mac", msg.Mac)).ToSql()
+	GetAllIncidentsLikeByMac = func(incid Incident) string {
+		sql, _, _ := partialGetAllFromIncident().Where(thisLibrarySucks("Mac", incid.Mac)).ToSql()
 		return sql
 	}
-	GetAllMessagesLikeByPesel = func(msg Message) string {
-		sql, _, _ := partialGetAllFromMessage().Where(thisLibrarySucks("Pesel", msg.Pesel)).ToSql()
+	GetAllIncidentsLikeByPesel = func(incid Incident) string {
+		sql, _, _ := partialGetAllFromIncident().Where(thisLibrarySucks("Pesel", incid.Pesel)).ToSql()
 		return sql
 	}
-	GetAllMessagesLikeByUsername = func(msg Message) string {
-		sql, _, _ := partialGetAllFromMessage().Where(thisLibrarySucks("Username", msg.Username)).ToSql()
+	GetAllIncidentsLikeByUsername = func(incid Incident) string {
+		sql, _, _ := partialGetAllFromIncident().Where(thisLibrarySucks("Username", incid.Username)).ToSql()
 		return sql
 	}
-	GetCountMessagesLikeByMac = func(msg Message) string {
-		sql, _, _ := partialGetCountFromMessage().Where(thisLibrarySucks("Mac", msg.Mac)).ToSql()
+	GetCountIncidentsLikeByMac = func(incid Incident) string {
+		sql, _, _ := partialGetCountFromIncident().Where(thisLibrarySucks("Mac", incid.Mac)).ToSql()
 		return sql
 	}
-	GetCountMessagesLikeByPesel = func(msg Message) string {
-		sql, _, _ := partialGetCountFromMessage().Where(thisLibrarySucks("Pesel", msg.Pesel)).ToSql()
+	GetCountIncidentsLikeByPesel = func(incid Incident) string {
+		sql, _, _ := partialGetCountFromIncident().Where(thisLibrarySucks("Pesel", incid.Pesel)).ToSql()
 		return sql
 	}
-	GetCountMessagesLikeByUsername = func(msg Message) string {
-		sql, _, _ := partialGetCountFromMessage().Where(thisLibrarySucks("Username", msg.Username)).ToSql()
+	GetCountIncidentsLikeByUsername = func(incid Incident) string {
+		sql, _, _ := partialGetCountFromIncident().Where(thisLibrarySucks("Username", incid.Username)).ToSql()
 		return sql
 	}
 
-	GetOptOutsOfUser = func(msg Message) string {
-		sql, _, _ := partialGetAllOptOuts().From("OptOut").Where(thisLibrarySucks("Pesel", msg.Pesel)).ToSql()
+	GetOptOutsOfUser = func(incid Incident) string {
+		sql, _, _ := partialGetAllOptOuts().From("OptOut").Where(thisLibrarySucks("Pesel", incid.Pesel)).ToSql()
 		return sql
 	}
 	GetLastIncidentByHash = func(hash string) string {
-		sql := fmt.Sprintf("SELECT ID, EventID, Message, Mac, Pesel, Username, Action FROM Message WHERE Pesel IN (SELECT DISTINCT Pesel FROM MailMessage WHERE Hash='%s') ORDER BY -Timestamp LIMIT 1", hash)
+		sql := fmt.Sprintf("SELECT ID, EventID, Incident, Mac, Pesel, Username, Action FROM Incident WHERE Pesel IN (SELECT DISTINCT Pesel FROM MailMessage WHERE Hash='%s') ORDER BY -Timestamp LIMIT 1", hash)
 		return sql
 	}
 )

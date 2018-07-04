@@ -32,9 +32,9 @@ type EventParsed struct {
 				Value               string `json:"value"`
 			} `json:"parameters"`
 		} `json:"triggered_condition"`
-		TriggeredAt      time.Time              `json:"triggered_at"`
-		Triggered        bool                   `json:"triggered"`
-		MatchingMessages []EventMatchingMessage `json:"matching_messages"`
+		TriggeredAt       time.Time               `json:"triggered_at"`
+		Triggered         bool                    `json:"triggered"`
+		MatchingIncidents []EventMatchingIncident `json:"matching_messages"`
 	} `json:"check_result"`
 	Stream struct {
 		CreatorUserID string        `json:"creator_user_id"`
@@ -75,20 +75,20 @@ type EventParsed struct {
 	} `json:"stream"`
 }
 
-type EventMatchingMessage struct {
-	Index     string             `json:"index"`
-	Message   string             `json:"m"`
-	Fields    EventMessageFields `json:"fields"`
-	ID        string             `json:"id"`
-	Timestamp time.Time          `json:"timestamp"`
-	Source    string             `json:"source"`
-	StreamIds []string           `json:"stream_ids"`
+type EventMatchingIncident struct {
+	Index     string              `json:"index"`
+	Message   string              `json:"message"`
+	Fields    EventIncidentFields `json:"fields"`
+	ID        string              `json:"id"`
+	Timestamp time.Time           `json:"timestamp"`
+	Source    string              `json:"source"`
+	StreamIds []string            `json:"stream_ids"`
 }
 
 // TODO
 // this probably should be map[string]string or map[string]interface{}
 // I need to marshall this and unmarshall it back a few times for using it in the template
-type EventMessageFields struct {
+type EventIncidentFields struct {
 	Level          int    `json:"-"` // in fact it is a "level"
 	Gl2RemoteIP    string `json:"gl2_remote_ip"`
 	Gl2RemotePort  int    `json:"-"` // and this is "gl2_remote_port", but don't tell anyone that I ignored these fields
@@ -129,8 +129,8 @@ func (u *Event) Validate(v *revel.Validation) {
 	v.ValidationResult(true)
 }
 
-func (m EventMatchingMessage) ToMessage(eventID int) Message {
-	return Message{
+func (m EventMatchingIncident) ToIncident(eventID int) Incident {
+	return Incident{
 		ID:        0,
 		EventID:   eventID,
 		Message:   m.Message,

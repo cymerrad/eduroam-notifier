@@ -85,10 +85,10 @@
     const linkedTagRe = /<(\w).*href=\\?"(.*?)\\?".*>(.*)<\/(\w+)>/g;
 
     OUTPUT.forEach(element => {
-        PARSED_OUTS.append(generateOutputMessage(element.recipient, element.body));
+        PARSED_OUTS.append(generateOutputIncident(element.recipient, element.body));
     });
 
-    function generateOutputMessage(recipient, body) {
+    function generateOutputIncident(recipient, body) {
         var [whole, tag, href, text] = linkedTagRe.exec(body);
         var [before, after] = body.split(whole);
 

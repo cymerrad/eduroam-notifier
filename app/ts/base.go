@@ -214,7 +214,7 @@ func (t *T) getTemplateIDOrDefault(in string) (TemplateID, error) {
 }
 
 //Preflight says how many first occurences to ignore and if there are any critical errors with the event.
-func (t *T) Preflight(fieldsStruct models.EventMessageFields) (int, error) {
+func (t *T) Preflight(fieldsStruct models.EventIncidentFields) (int, error) {
 	_, err := t.getTemplateIDOrDefault(fieldsStruct.Action)
 	if err != nil {
 		return 0, err
@@ -228,7 +228,7 @@ func (t *T) Preflight(fieldsStruct models.EventMessageFields) (int, error) {
 	return ignoreFirst, nil
 }
 
-func (t *T) Input(fieldsStruct models.EventMessageFields, extras map[string]string) (string, error) {
+func (t *T) Input(fieldsStruct models.EventIncidentFields, extras map[string]string) (string, error) {
 	// get the template we need
 	tmplID, err := t.getTemplateIDOrDefault(fieldsStruct.Action)
 	if err != nil {

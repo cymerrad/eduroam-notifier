@@ -213,9 +213,9 @@ func (c Notifier) retrieveSettingsFromSession() (s SettingsData, err error) {
 func (c Notifier) interpretEvent(event models.EventParsed, eventID int, templateSystem *ts.T) ([]models.MailMessage, error) {
 	out := make([]models.MailMessage, 0)
 
-	for _, match := range event.CheckResult.MatchingMessages {
+	for _, match := range event.CheckResult.MatchingIncidents {
 		extras := make(map[string]string)
-		msg := match.ToMessage(0)
+		incid := match.ToIncident(0)
 
 		// price of using goto
 		var body string
@@ -227,8 +227,8 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		var otherData OtherUserData
 		// var otherDataMap map[string]string
 
-		if err = c.Txn.Insert(&msg); err != nil {
-			c.Log.Errorf("Saving the EVENT message: %s", err.Error())
+		if err = c.Txn.Insert(&incid); err != nil {
+			c.Log.Errorf("Saving the EVENT Incident: %s", err.Error())
 		}
 
 		mailMsg := models.MailMessage{}
@@ -237,7 +237,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		optOuts := make([]models.OptOut, 0)
 
 		// PRE-RENDER CHECKS
-		_, err = c.Txn.Select(&optOuts, models.GetOptOutsOfUser(msg))
+		_, err = c.Txn.Select(&optOuts, models.GetOptOutsOfUser(incid))
 		if err != nil {
 			c.Log.Errorf("Opt-out finding failed. Refusing to take action. %s", err.Error())
 			return nil, err
@@ -257,7 +257,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			goto SKIPPING_STUFF
 		}
 
-		previous, err = c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		previous, err = c.Txn.SelectInt(models.GetCountIncidentsLikeByMac(incid))
 		if err != nil {
 			c.Log.Errorf("Counting previous failed.")
 			return nil, err
@@ -296,29 +296,29 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			}
 		}
 
-		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByMac(msg))
+		countMsgs, err = c.Txn.SelectInt(models.GetCountIncidentsLikeByMac(incid))
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
 		} else {
 			extras[ts.COUNT_MAC] = strconv.FormatInt(countMsgs, 10)
 		}
 
-		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByPesel(msg))
+		countMsgs, err = c.Txn.SelectInt(models.GetCountIncidentsLikeByPesel(incid))
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
 		} else {
 			extras[ts.COUNT_PESEL] = strconv.FormatInt(countMsgs, 10)
 		}
 
-		countMsgs, err = c.Txn.SelectInt(models.GetCountMessagesLikeByUsername(msg))
+		countMsgs, err = c.Txn.SelectInt(models.GetCountIncidentsLikeByUsername(incid))
 		if err != nil {
 			c.Log.Errorf("Executing counting query: %s", err.Error())
 		} else {
 			extras[ts.COUNT_USERNAME] = strconv.FormatInt(countMsgs, 10)
 		}
 
-		// FINALLY GET THE CONTENTS OF THE MESSAGE
-		body, err = interpretMessage(match.Fields, extras, eventID, templateSystem)
+		// FINALLY GET THE CONTENTS OF THE Incident
+		body, err = interpretIncident(match.Fields, extras, eventID, templateSystem)
 		if err != nil {
 			c.Log.Errorf("Generating body: %s", err.Error())
 			mailMsg.Error = err.Error()
@@ -332,20 +332,20 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		out = append(out, mailMsg)
 
 		if err := c.Txn.Insert(&mailMsg); err != nil {
-			c.Log.Errorf("Saving the MAIL message: %s", err.Error())
+			c.Log.Errorf("Saving the MAIL Incident: %s", err.Error())
 		}
 	}
 
 	return out, nil
 }
 
-func interpretMessage(fields models.EventMessageFields, extras map[string]string, eventID int, a *ts.T) (string, error) {
+func interpretIncident(fields models.EventIncidentFields, extras map[string]string, eventID int, a *ts.T) (string, error) {
 	return a.Input(fields, extras)
 }
 
 // TODO
 // this will seriously change (e.g. make calls to some other service)
-func getUserEmailAddress(fields *models.EventMessageFields) (recipient string, err error) {
+func getUserEmailAddress(fields *models.EventIncidentFields) (recipient string, err error) {
 	pesel := fields.Pesel
 	emailAddr := ""
 	err = USOSdbm.SelectOne(&emailAddr, "SELECT EMAIL FROM DZ_OSOBY WHERE PESEL=?", pesel)
@@ -374,7 +374,7 @@ func (o OtherUserData) ToMap() map[string]string {
 	return andBackAgain
 }
 
-func getOtherUserData(fields *models.EventMessageFields) (OtherUserData, error) {
+func getOtherUserData(fields *models.EventIncidentFields) (OtherUserData, error) {
 	var data OtherUserData
 	pesel := fields.Pesel
 
@@ -382,17 +382,17 @@ func getOtherUserData(fields *models.EventMessageFields) (OtherUserData, error) 
 	return data, err
 }
 
-func stampTheMessage(msg *models.MailMessage, fields *models.EventMessageFields, eventID int) {
+func stampTheMessage(incid *models.MailMessage, fields *models.EventIncidentFields, eventID int) {
 	recipient, err := getUserEmailAddress(fields)
 	if err != nil {
-		msg.Error = err.Error()
+		incid.Error = err.Error()
 	}
 
-	msg.Recipient = recipient
-	msg.Created = time.Now()
-	msg.EventID = eventID
-	msg.Hash = ConvertEmailAddressToHash(recipient)
-	msg.Pesel = fields.Pesel
+	incid.Recipient = recipient
+	incid.Created = time.Now()
+	incid.EventID = eventID
+	incid.Hash = ConvertEmailAddressToHash(recipient)
+	incid.Pesel = fields.Pesel
 }
 
 func (c Notifier) Cancel(id string) revel.Result {
@@ -400,7 +400,7 @@ func (c Notifier) Cancel(id string) revel.Result {
 	// render pages for passing in the comments
 	c.Log.Debugf("Requested cancellation of %s", id)
 
-	var lastMsg models.Message
+	var lastMsg models.Incident
 	err := c.Txn.SelectOne(&lastMsg, models.GetLastIncidentByHash(id))
 	if err != nil {
 		c.Log.Errorf("Cancelling with hash: %s", err.Error())
@@ -421,7 +421,7 @@ func ConvertEmailAddressToHash(email string) string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(email)))
 }
 
-func CreateOptOutEntry(filter models.Message, comment string) (models.OptOut, error) {
+func CreateOptOutEntry(filter models.Incident, comment string) (models.OptOut, error) {
 	optOut := models.OptOut{
 		Action:   filter.Action,
 		Comment:  comment,
