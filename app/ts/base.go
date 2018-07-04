@@ -20,6 +20,7 @@ type T struct {
 	ReplaceWithField map[TemplateTag]Field
 	ReplaceWithConst map[TemplateTag]ConstValue
 	IgnoreFirst      map[Action]int
+	Subjects         map[Action]string
 }
 
 type TemplateID string
@@ -33,13 +34,13 @@ func New(other models.NotifierSettingsParsed, rules []models.NotifierRule, templ
 		return nil, err
 	}
 
-	a, f, c, i, err := ParseRules(rules)
+	a, f, c, i, s, err := ParseRules(rules)
 	if err != nil {
 		return nil, err
 	}
 
 	t := T{
-		ts, a, f, c, i,
+		ts, a, f, c, i, s,
 	}
 
 	return &t, nil
@@ -70,11 +71,19 @@ var (
 	ErrUnrecognizedOption    = func(in string) error { return fmt.Errorf("unrecognized option: %s", in) }
 )
 
-func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF map[TemplateTag]Field, outC map[TemplateTag]ConstValue, outI map[Action]int, err error) {
-	outA = make(map[Action]TemplateID)
-	outF = make(map[TemplateTag]Field)
-	outC = make(map[TemplateTag]ConstValue)
-	outI = make(map[Action]int)
+func ParseRules(rules []models.NotifierRule) (
+	outA map[Action]TemplateID,
+	outF map[TemplateTag]Field,
+	outC map[TemplateTag]ConstValue,
+	outI map[Action]int,
+	outS map[Action]string,
+	err error,
+) {
+	outA = make(map[Action]TemplateID)      // pick template
+	outF = make(map[TemplateTag]Field)      // substitute with field
+	outC = make(map[TemplateTag]ConstValue) // constants
+	outI = make(map[Action]int)             // ignore
+	outS = make(map[Action]string)          // subject
 
 	var STOP = false
 
@@ -103,14 +112,19 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 				ifNotOkBail(ok)
 				outA[Action(action)] = TemplateID(templateID)
 
-			case DoIgnoreFirstN:
-				ignoreValue, ok := values[DoIgnoreFirstN]
+			case DoActionIgnoreFirstN:
+				ignoreValue, ok := values[DoActionIgnoreFirstN]
 				ifNotOkBail(ok)
 				parsed, err := strconv.Atoi(ignoreValue)
 				if err != nil {
 					return err
 				}
 				outI[Action(action)] = parsed
+
+			case DoActionEnterSubject:
+				subjectPattern, ok := values[DoActionEnterSubject]
+				ifNotOkBail(ok)
+				outS[Action(action)] = subjectPattern
 
 			default:
 				// unrecognized
@@ -147,10 +161,10 @@ func ParseRules(rules []models.NotifierRule) (outA map[Action]TemplateID, outF m
 	for _, rl := range rules {
 		err2 := extract(rl)
 		if STOP {
-			return nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, err
 		}
 		if err2 != nil {
-			return nil, nil, nil, nil, err2
+			return nil, nil, nil, nil, nil, err2
 		}
 	}
 

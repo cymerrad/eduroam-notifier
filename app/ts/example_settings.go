@@ -33,8 +33,8 @@ var StartingRules = []models.NotifierRule{
 	},
 	{
 		On:      OnAction,
-		Do:      DoIgnoreFirstN,
-		Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoIgnoreFirstN, "5"),
+		Do:      DoActionIgnoreFirstN,
+		Value:   GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoActionIgnoreFirstN, "5"),
 		Created: TimeZero,
 	},
 }

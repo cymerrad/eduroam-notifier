@@ -17,6 +17,7 @@ func TestParseRules(t *testing.T) {
 		wantOutF map[TemplateTag]Field
 		wantOutC map[TemplateTag]ConstValue
 		wantOutI map[Action]int
+		wantOutS map[Action]string
 		wantErr  bool
 	}{
 		{"valid", args{StartingRules},
@@ -24,6 +25,7 @@ func TestParseRules(t *testing.T) {
 			map[TemplateTag]Field{"mac": "source-mac", "pesel": "Pesel"},
 			map[TemplateTag]ConstValue{"signature": "DSK UW"},
 			map[Action]int{"Login incorrect (mschap: MS-CHAP2-Response is incorrect)": 5},
+			map[Action]string{},
 			false},
 		{ErrDeclaredValueMismatch.Error(), args{[]models.NotifierRule{
 			{
@@ -32,7 +34,7 @@ func TestParseRules(t *testing.T) {
 				Value: GenerateJSON("cokolwiek", "signature", "cokolwiek", "DSK UW"),
 			},
 		}},
-			nil, nil, nil, nil,
+			nil, nil, nil, nil, nil,
 			true},
 		{ErrUnrecognizedOption("nie").Error(), args{[]models.NotifierRule{
 			{
@@ -41,7 +43,7 @@ func TestParseRules(t *testing.T) {
 				Value: GenerateJSON(OnTemplateTag, "signature", DoInsertText, "DSK UW"),
 			},
 		}},
-			nil, nil, nil, nil,
+			nil, nil, nil, nil, nil,
 			true},
 		{ErrUnrecognizedOption("eh").Error(), args{[]models.NotifierRule{
 			{
@@ -50,21 +52,21 @@ func TestParseRules(t *testing.T) {
 				Value: GenerateJSON(OnTemplateTag, "signature", DoInsertText, "DSK UW"),
 			},
 		}},
-			nil, nil, nil, nil,
+			nil, nil, nil, nil, nil,
 			true},
 		{"strconv.Atoi: parsing \"abc\": invalid syntax", args{[]models.NotifierRule{
 			{
 				On:    OnAction,
-				Do:    DoIgnoreFirstN,
-				Value: GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoIgnoreFirstN, "abc"),
+				Do:    DoActionIgnoreFirstN,
+				Value: GenerateJSON(OnAction, "Login incorrect (mschap: MS-CHAP2-Response is incorrect)", DoActionIgnoreFirstN, "abc"),
 			},
 		}},
-			nil, nil, nil, nil,
+			nil, nil, nil, nil, nil,
 			true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotOutA, gotOutF, gotOutC, gotOutI, err := ParseRules(tt.args.rules)
+			gotOutA, gotOutF, gotOutC, gotOutI, gotOutS, err := ParseRules(tt.args.rules)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseRules() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -85,6 +87,9 @@ func TestParseRules(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotOutI, tt.wantOutI) {
 				t.Errorf("ParseRules() gotOutI = %v, want %v", gotOutI, tt.wantOutI)
+			}
+			if !reflect.DeepEqual(gotOutS, tt.wantOutS) {
+				t.Errorf("ParseRules() gotOutS = %v, want %v", gotOutS, tt.wantOutS)
 			}
 		})
 	}

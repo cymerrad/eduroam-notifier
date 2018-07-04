@@ -3,7 +3,7 @@ package ts
 import "fmt"
 
 var Schema map[string][]string = map[string][]string{
-	OnAction:      {DoActionPickTemplate, DoIgnoreFirstN},
+	OnAction:      {DoActionPickTemplate, DoActionIgnoreFirstN, DoActionEnterSubject},
 	OnTemplateTag: {DoSubstituteWithField, DoInsertText},
 }
 

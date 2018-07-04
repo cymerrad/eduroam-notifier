@@ -8,7 +8,8 @@ const (
 
 const (
 	DoActionPickTemplate = "pick_template"
-	DoIgnoreFirstN       = "ignore_first_n"
+	DoActionIgnoreFirstN = "ignore_first_n"
+	DoActionEnterSubject = "enter_subject"
 )
 
 const (
