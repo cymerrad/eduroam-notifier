@@ -319,7 +319,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		}
 
 		// FINALLY GET THE CONTENTS OF THE Incident
-		body, subject, err = interpretIncident(match.Fields, extras, eventID, templateSystem)
+		body, subject, err = interpretIncident(match.Fields, extras, templateSystem)
 		if err != nil {
 			c.Log.Errorf("Generating body: %s", err.Error())
 			mailMsg.Error = err.Error()
@@ -341,7 +341,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 	return out, nil
 }
 
-func interpretIncident(fields models.EventIncidentFields, extras map[string]string, eventID int, a *ts.T) (string, string, error) {
+func interpretIncident(fields models.EventIncidentFields, extras map[string]string, a *ts.T) (string, string, error) {
 	var fieldsMap map[string]string
 	btz, _ := json.Marshal(fields)
 	err := json.Unmarshal(btz, &fieldsMap)
