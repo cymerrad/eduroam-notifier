@@ -10,7 +10,7 @@ module:jobs
 
 GET     /                                       App.Index
 POST    /                                       Notifier.Notify
-GET     /index                                  App.Console
+GET     /index                                  Notifier.Console
 POST    /login                                  App.Login
 GET     /logout                                 App.Logout
 GET     /curl                                   Curl.Index

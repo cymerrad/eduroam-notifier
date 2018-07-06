@@ -1,0 +1,8 @@
+{{set . "title" "Main screen"}}
+{{template "header.html" .}}
+
+<form method="POST" class="form" action="{{url "Notifier.Settings"}}" id="json-form">
+{{template "settings.html" .}}
+</form>
+
+{{template "footer.html" .}}

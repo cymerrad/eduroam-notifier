@@ -61,6 +61,24 @@ func (c Notifier) parseEvent() (models.EventParsed, error) {
 	return eventP, err
 }
 
+func (c Notifier) Console() revel.Result {
+	if c.Validation.HasErrors() {
+		return c.Render()
+	}
+	settings, err := c.retrieveSettingsFromDB()
+	if err != nil {
+		c.Validation.Error("Error occurred: %s", err.Error())
+	}
+	if c.Validation.HasErrors() {
+		c.Validation.Keep()
+		c.FlashParams()
+	}
+
+	c.ViewArgs["settings"] = settings
+
+	return c.Render()
+}
+
 func (c Notifier) Settings() revel.Result {
 	s, err := c.retrieveSettingsFromSession()
 	if err != nil {

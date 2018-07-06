@@ -20,14 +20,8 @@ var globalTemplate *ts.T
 
 func (c App) Index() revel.Result {
 	if c.connected() != nil {
-		return c.Redirect(routes.App.Console())
+		return c.Redirect(routes.Notifier.Console())
 	}
-	return c.Render()
-}
-
-func (c App) Console() revel.Result {
-	// c.ViewArgs["settings"] = settings
-
 	return c.Render()
 }
 
@@ -87,7 +81,7 @@ func (c App) Login(username, password string, remember bool) revel.Result {
 				c.Session.SetNoExpiration()
 			}
 			c.Flash.Success("Welcome, " + username)
-			return c.Redirect(routes.App.Console())
+			return c.Redirect(routes.Notifier.Console())
 		}
 	}
 
