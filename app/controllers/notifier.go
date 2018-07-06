@@ -277,8 +277,8 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		} else {
 			hash := ConvertEmailAddressToHash(emailAddr)
 			urlPath, err := revel.ReverseURL("Notifier.Cancel", hash)
-			urlFull := fmt.Sprintf("http://%s%s", c.Request.Host, urlPath)
-			clickyLink := fmt.Sprintf("<a href=\"%s\">Click me</a>", urlFull)
+			clickyLink := fmt.Sprintf("http://%s%s", c.Request.Host, urlPath)
+			// clickyLink := fmt.Sprintf("<a href=\"%s\">Click me</a>", urlFull)
 
 			if err != nil {
 				c.Log.Errorf("Generating link: %s", err.Error())

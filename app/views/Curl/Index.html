@@ -82,16 +82,22 @@
     $('#json-output').text("{{.curl.Output}}");
     var OUTPUT = JSON.parse("{{.curl.Output}}");
     var PARSED_OUTS = $('#parsed-output');
-    const linkedTagRe = /<(\w).*href=\\?"(.*?)\\?".*>(.*)<\/(\w+)>/g;
+    const cancelLinkRe = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}(\.[a-z]{2,6})?(:\d{2,6})?\b(\/\w+)+/g;
 
     OUTPUT.forEach(element => {
         PARSED_OUTS.append(generateOutputIncident(element.recipient, element.body));
     });
 
     function generateOutputIncident(recipient, body) {
-        var [whole, tag, href, text] = linkedTagRe.exec(body);
-        var [before, after] = body.split(whole);
-
+        var insides;
+        try {
+            var [whole] = cancelLinkRe.exec(body);
+            var [before, after] = body.split(whole);
+            insides = [before, createElement("a", { href: whole }, whole), after];
+        } catch (e) {
+            insides = [body];
+        }
+        
         return createElement(
             "li",
             { class: "list-group-item" },
@@ -104,10 +110,12 @@
                 createElement("div", {
                     class: "well",
                     style: "white-space: pre;",
-                }, before, createElement(tag, { href: href}, text), after),
+                }, ...insides),
             ),
         );
     }
+
+    window.scrollTo({top: window.scrollMaxY, behavior: 'smooth'});
 </script>
 {{end}}
 
