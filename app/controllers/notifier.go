@@ -246,6 +246,7 @@ func (c Notifier) retrieveSettingsFromSession() (s SettingsData, err error) {
 	return settings, err
 }
 
+// if eventID == 0 then do not save the incidents!
 func (c Notifier) interpretEvent(event models.EventParsed, eventID int, templateSystem *ts.T) ([]models.MailMessage, error) {
 	out := make([]models.MailMessage, 0)
 
@@ -264,8 +265,10 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		var otherData OtherUserData
 		// var otherDataMap map[string]string
 
-		if err = c.Txn.Insert(&incid); err != nil {
-			c.Log.Errorf("Saving the EVENT Incident: %s", err.Error())
+		if eventID > 0 {
+			if err = c.Txn.Insert(&incid); err != nil {
+				c.Log.Errorf("Saving the EVENT Incident: %s", err.Error())
+			}
 		}
 
 		mailMsg := models.MailMessage{}
@@ -370,7 +373,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		out = append(out, mailMsg)
 
 		if err := c.Txn.Insert(&mailMsg); err != nil {
-			c.Log.Errorf("Saving the MAIL Incident: %s", err.Error())
+			c.Log.Errorf("Saving the MAIL message: %s", err.Error())
 		}
 	}
 
