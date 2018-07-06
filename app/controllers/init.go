@@ -32,7 +32,6 @@ func init() {
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
 	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
 
-	// revel.InterceptMethod(App.checkUser, revel.BEFORE)
 	revel.InterceptMethod(App.AddUser, revel.BEFORE)
 	revel.InterceptMethod(Curl.checkUser, revel.BEFORE)
 }
@@ -255,10 +254,7 @@ func initializeGlobalVariables() {
 
 	chillax(Dbm.Select(&templates, models.GetAllNotifierTemplates))
 	chillax(Dbm.Select(&rules, models.GetAllNotifierRules))
-	err = Dbm.SelectOne(&settings, models.GetNotifierSettings)
-	if err != nil {
-		revel.AppLog.Errorf("Failed initialization: %s", err.Error())
-	}
+	chillax(nil, Dbm.SelectOne(&settings, models.GetNotifierSettings))
 
 	settingsParsed, err := settings.Unmarshall()
 	if err != nil {
