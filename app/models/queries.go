@@ -12,6 +12,13 @@ const (
 	GetNotifierSettings     = "SELECT * FROM NotifierSettings WHERE CreatedString = ( SELECT MAX(CreatedString) FROM NotifierSettings ) LIMIT 1"
 )
 
+const (
+	DeleteLatestRules     = "DELETE FROM NotifierRule WHERE ID IN (SELECT ID FROM (" + GetAllNotifierRules + ") AS p)"
+	DeleteLatestTemplates = "DELETE FROM NotifierTemplate WHERE ID IN (SELECT ID FROM (" + GetAllNotifierTemplates + ") AS p)"
+	DeleteLatestSettings  = "DELETE FROM NotifierSettings WHERE ID IN (SELECT ID FROM (" + GetNotifierSettings + ") AS p)"
+)
+
+// GET's
 var (
 	mysql            = sq.StatementBuilder.PlaceholderFormat(sq.Question)
 	thisLibrarySucks = func(column, value string) string { return fmt.Sprintf("%s = '%s'", column, value) }

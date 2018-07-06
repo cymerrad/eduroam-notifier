@@ -137,6 +137,14 @@ func (c Notifier) saveSettings(s SettingsData) error {
 
 func (c Notifier) Revert() revel.Result {
 	c.Log.Debugf("Reverting")
+	var chillax = func(res interface{}, err error) {
+		if err != nil {
+			revel.AppLog.Errorf("Failed reverting: %s", err.Error())
+		}
+	}
+	chillax(c.Txn.Exec(models.DeleteLatestRules))
+	chillax(c.Txn.Exec(models.DeleteLatestTemplates))
+	chillax(c.Txn.Exec(models.DeleteLatestSettings))
 
 	return c.conditionalRedirect()
 }
