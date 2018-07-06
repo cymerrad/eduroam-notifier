@@ -18,6 +18,7 @@ POST    /curl                                   Curl.Notify
 POST    /settings                               Notifier.Settings
 GET     /revert                                 Notifier.Revert
 GET     /cancel/:id                             Notifier.Cancel
+GET     /archive                                Archive.Index
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

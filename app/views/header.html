@@ -32,7 +32,8 @@
                 <ul class="nav navbar-nav">
                   <li><a href="{{url "App.Index"}}">Home</a></li>
                   <li><a href="{{url "Curl.Index"}}">Try it out</a></li>
-                  {{if .settings}} <!-- Order of elements -->
+                  <li><a href="{{url "Archive.Index"}}">Archive</a></li>
+                  {{if .archive}} <!-- Order of elements -->
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Sort by<span class="caret"></span></a>
                     <ul class="dropdown-menu">
