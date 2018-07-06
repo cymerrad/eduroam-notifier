@@ -24,7 +24,7 @@
 </div>
 </form>
 
-<div class="container">
+<div class="container" id="results-container">
     <h2>The example event will have the following effect:</h2>
     {{if .curl}}
     <label for="parsed-output">Expected results</label>
@@ -115,7 +115,7 @@
         );
     }
 
-    window.scrollTo({top: window.scrollMaxY, behavior: 'smooth'});
+    window.scrollTo({top: $('#results-container')[0].offsetTop, behavior: 'smooth'});
 </script>
 {{end}}
 
