@@ -16,6 +16,7 @@ GET     /logout                                 App.Logout
 GET     /curl                                   Curl.Index
 POST    /curl                                   Curl.Notify
 POST    /settings                               Notifier.Settings
+GET     /revert                                 Notifier.Revert
 GET     /cancel/:id                             Notifier.Cancel
 
 # Ignore favicon requests

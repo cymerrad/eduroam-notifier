@@ -77,6 +77,10 @@ func (c Notifier) Settings() revel.Result {
 
 	c.Log.Debugf("Form: %v", c.Params.Values)
 
+	return c.conditionalRedirect()
+}
+
+func (c Notifier) conditionalRedirect() revel.Result {
 	redirectTo := c.Params.Get("redirect")
 	if redirectTo == "curl" {
 		return c.Redirect(Curl.Index)
@@ -129,6 +133,12 @@ func (c Notifier) saveSettings(s SettingsData) error {
 	}(errors...)
 
 	return nil
+}
+
+func (c Notifier) Revert() revel.Result {
+	c.Log.Debugf("Reverting")
+
+	return c.conditionalRedirect()
 }
 
 func (c Notifier) retrieveSettingsFromDB() (s SettingsData, err error) {

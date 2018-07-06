@@ -5,7 +5,10 @@
     <div class="container" style="margin-bottom: 20px">
         <button type="button" class="btn btn-lg btn-primary" id="save-settings" >Save current settings</button>
         <a class="btn btn-lg btn-danger" id="reload-settings" href="{{url "Curl.Index"}}">Reload saved settings</a>
+        <a class="btn btn-lg btn-danger" id="reload-settings" href="{{url "Notifier.Revert"}}{{if .curl}}?redirect=curl{{end}}">Revert to previous settings</a>
+        <!-- <button type="button" class="btn btn-lg btn-danger" id="revert-settings">Revert settings</button> -->
         {{if .curl}}
+        <script>const CURL_FLAG=true;</script>
         <input hidden class="hidden" name="redirect" value="curl">
         {{end}}
     </div>
@@ -132,6 +135,7 @@
         var addRuleButton = $('#adding-rule-submit');
         var newTemplateButton = $('#new-template-button');
         var saveSettingsButton = $('#save-settings');
+        // var revertSettingsButton = $('#revert-settings');
 
         saveSettingsButton.click(function(event){
             transferVisibleToHiddenForm();
@@ -144,6 +148,16 @@
             return
             
         });
+
+        //  revertSettingsButton.click(function(event){
+        //     var REVERT_FORM = createElement("form", {method: "POST", action: '{{url "Notifier.Revert"}}'})
+        //     if (CURL_FLAG) {
+        //         REVERT_FORM.appendChild(createElement("input", {name: "redirect", value: "curl"}))
+        //     }
+        //     console.log(REVERT_FORM);
+        //     return REVERT_FORM.submit();
+            
+        // });
 
         function transferVisibleToHiddenForm() {
             var VISIBLE_VALUES = $('.settings-value'); // refind
@@ -239,6 +253,12 @@
                 }
                 if (props.hasOwnProperty("href")) {
                     newEl.setAttribute('href', props.href)
+                }
+                if (props.hasOwnProperty("method")) {
+                    newEl.setAttribute('method', props.method)
+                }
+                if (props.hasOwnProperty("action")) {
+                    newEl.setAttribute('action', props.action)
                 }
             }
             for (i=0; i<children.length; i++) {
