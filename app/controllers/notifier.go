@@ -154,6 +154,25 @@ func (c Notifier) saveSettings(s SettingsData) error {
 }
 
 func (c Notifier) Revert() revel.Result {
+	first, err1 := c.Txn.SelectStr(models.GetFirstDate)
+	last, err2 := c.Txn.SelectStr(models.GetLastDate)
+	if err1 != nil || err2 != nil {
+		c.Log.Errorf("Refusing to revert")
+		c.Validation.Error("Refusing to revert")
+		c.Validation.Keep()
+		c.FlashParams()
+		return c.conditionalRedirect()
+	}
+
+	c.Log.Debugf("First %s, last %s", first, last)
+
+	if first == last {
+		c.Validation.Error("Already at the oldest settings")
+		c.Validation.Keep()
+		c.FlashParams()
+		return c.conditionalRedirect()
+	}
+
 	c.Log.Debugf("Reverting")
 	var chillax = func(res interface{}, err error) {
 		if err != nil {
