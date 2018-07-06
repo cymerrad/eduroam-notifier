@@ -5,7 +5,7 @@
 
 module:testrunner
 module:static
-# module:jobs
+module:jobs
 
 
 GET     /                                       App.Index

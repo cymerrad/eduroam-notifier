@@ -269,8 +269,6 @@ func initializeGlobalVariables() {
 	if err != nil {
 		revel.AppLog.Critf("Failed initialization of templates: %s", err.Error())
 	}
-
-	revel.AppLog.Debugf("Templating system: \n %s", globalTemplate.Show())
 }
 
 var InitUSOSdbm = func() {
