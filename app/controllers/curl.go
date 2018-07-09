@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/revel/revel"
 )
@@ -98,9 +99,23 @@ func (c Curl) Notify() revel.Result {
 	// </override>
 	settings.Rules = settings.Rules[:len(settings.Rules)-1]
 
-	output, err := c.dryRun(event, templates)
-	if err != nil {
-		c.Validation.Error("Error while generating output: %s", err.Error())
+	var start = time.Now()
+	var done = make(chan bool)
+	var output []byte
+	timeout := time.After(time.Duration(revel.Config.IntDefault("usos_db.timeout", 15)) * time.Second)
+	go func() {
+		output, err = c.dryRun(event, templates)
+		done <- true
+		if err != nil {
+			c.Validation.Error("Error while generating output: %s", err.Error())
+		}
+	}()
+
+	select {
+	case end := <-timeout:
+		c.Validation.Error("Timeout on USOS connection reached after %f seconds", end.Sub(start).Seconds())
+	case _ = <-done:
+
 	}
 
 	c.ViewArgs["curl"] = CurlData{

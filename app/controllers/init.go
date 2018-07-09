@@ -283,7 +283,9 @@ var InitUSOSdbm = func() {
 	} else {
 		USOSdbm = &gorp.DbMap{
 			Db:      db,
-			Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+			Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"},
+		}
+		revel.AppLog.Debugf("Successfully refreshed connection")
 	}
 }
 
