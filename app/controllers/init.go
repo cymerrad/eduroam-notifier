@@ -285,7 +285,13 @@ var InitUSOSdbm = func() {
 			Db:      db,
 			Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"},
 		}
-		revel.AppLog.Debugf("Successfully refreshed connection")
+
+		_, err = USOSdbm.Exec("SELECT version()")
+		if err != nil {
+			revel.AppLog.Critf("USOS connection is dead.")
+		} else {
+			revel.AppLog.Debugf("Successfully refreshed connection.")
+		}
 	}
 }
 
