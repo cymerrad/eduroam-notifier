@@ -98,9 +98,14 @@ func (c Curl) Notify() revel.Result {
 	// </override>
 	settings.Rules = settings.Rules[:len(settings.Rules)-1]
 
+	output, err := c.dryRun(event, templates)
+	if err != nil {
+		c.Validation.Error("Error while generating output: %s", err.Error())
+	}
+
 	c.ViewArgs["curl"] = CurlData{
 		Input:  string(prettiedUpInput),
-		Output: c.dryRun(event, templates),
+		Output: string(output),
 	}
 	if res, ok := c.HasErrorsRedirect(Curl.Index); ok {
 		return res
@@ -111,12 +116,13 @@ func (c Curl) Notify() revel.Result {
 	return c.RenderTemplate("Curl/Index.html")
 }
 
-func (c Curl) dryRun(event models.EventParsed, templateSystem *ts.T) string {
-	out, _ := c.interpretEvent(event, 0, templateSystem)
+func (c Curl) dryRun(event models.EventParsed, templateSystem *ts.T) ([]byte, error) {
+	out, err := c.interpretEvent(event, 0, templateSystem)
+	if err != nil {
+		return nil, err
+	}
 
-	btz, _ := json.MarshalIndent(out, "", "  ")
-
-	return string(btz)
+	return json.MarshalIndent(out, "", "  ")
 }
 
 const witnessMeBloodBag = `__        ___ _                       _ 

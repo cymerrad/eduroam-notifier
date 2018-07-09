@@ -290,12 +290,19 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 			}
 		}
 
+		// declared so we can append to it some potential errors
 		mailMsg := models.MailMessage{}
-		stampTheMessage(&mailMsg, &match.Fields, eventID)
 
 		optOuts := make([]models.OptOut, 0)
 
 		// PRE-RENDER CHECKS
+		_, err = USOSdbm.Exec("SELECT version()")
+		if err != nil {
+			// connection is dead => we won't get the email address => abort
+			mailMsg.Error = fmt.Sprintf("USOS DB connection died: %s", err.Error())
+			goto SKIPPING_STUFF
+		}
+
 		_, err = c.Txn.Select(&optOuts, models.GetOptOutsOfUser(incid))
 		if err != nil {
 			c.Log.Errorf("Opt-out finding failed. Refusing to take action. %s", err.Error())
@@ -328,10 +335,14 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		}
 
 		// CONSTANTS FOR TEMPLATING
+		// THESE REQUIRE AN ACTIVE CONNECTION TO USOS DB
 		emailAddr, err = getUserEmailAddress(&match.Fields)
 		if err != nil {
 			c.Log.Errorf("getUserEmailAddress: %s", err.Error())
+			mailMsg.Error = fmt.Sprintf("Error determining email address: %s", err.Error())
 			extras[ts.CANCEL_LINK] = "(could not be generated, sorry)"
+
+			goto SKIPPING_STUFF
 		} else {
 			hash := ConvertEmailAddressToHash(emailAddr)
 			urlPath, err := revel.ReverseURL("Notifier.Cancel", hash)
@@ -389,6 +400,7 @@ func (c Notifier) interpretEvent(event models.EventParsed, eventID int, template
 		// IF ANYTHING BAD HAPPEND DURING THIS PROCEDURE, WE WILL ARRIVE HERE - SKIPPING GENERATING BODY ET AL.
 	SKIPPING_STUFF:
 
+		stampTheMessage(&mailMsg, &match.Fields, eventID, emailAddr)
 		out = append(out, mailMsg)
 
 		if err := c.Txn.Insert(&mailMsg); err != nil {
@@ -456,12 +468,7 @@ func getOtherUserData(fields *models.EventIncidentFields) (OtherUserData, error)
 	return data, err
 }
 
-func stampTheMessage(incid *models.MailMessage, fields *models.EventIncidentFields, eventID int) {
-	recipient, err := getUserEmailAddress(fields)
-	if err != nil {
-		incid.Error = err.Error()
-	}
-
+func stampTheMessage(incid *models.MailMessage, fields *models.EventIncidentFields, eventID int, recipient string) {
 	incid.Recipient = recipient
 	incid.Created = time.Now()
 	incid.EventID = eventID
